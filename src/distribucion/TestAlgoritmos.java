@@ -44,7 +44,9 @@ public class TestAlgoritmos {
 
         // probar busqueda binaria
         Pedido encontrado = BusquedaBinariaPedidos.buscarPorId(pedidos, 102);
-        verificar("buscar pedido existente", encontrado != null && encontrado.getId() == 102);
+
+        verificar("buscar pedido existente",
+                encontrado != null && encontrado.getId() == 102);
 
         verificar("buscar pedido inexistente",
                 BusquedaBinariaPedidos.buscarPorId(pedidos, 999) == null);
@@ -77,6 +79,14 @@ public class TestAlgoritmos {
                 vacio.contains("prioridad total: 0")
                         && vacio.contains("capacidad restante: 50 kg"));
 
+        // probar ubicacion con nombre vacio
+        try {
+            new Ubicacion(2, "", TipoUbicacion.CENTRO_COMUNITARIO);
+            verificar("nombre de ubicacion vacio", false);
+        } catch (IllegalArgumentException e) {
+            verificar("nombre de ubicacion vacio", true);
+        }
+
         System.out.println("\npruebas correctas: " + correctas);
         System.out.println("pruebas fallidas: " + fallidas);
 
@@ -86,6 +96,7 @@ public class TestAlgoritmos {
     }
 
     private static boolean idsCorrectos(Pedido[] pedidos, int... ids) {
+
         if (pedidos.length != ids.length) {
             return false;
         }
@@ -116,6 +127,7 @@ public class TestAlgoritmos {
     }
 
     private static void verificar(String nombre, boolean resultado) {
+
         if (resultado) {
             System.out.println("ok - " + nombre);
             correctas++;
