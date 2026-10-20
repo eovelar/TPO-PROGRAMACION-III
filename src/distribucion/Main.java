@@ -10,6 +10,7 @@ import distribucion.modelo.Vehiculo;
 import distribucion.pedidos.GestorPedidos;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class Main {
@@ -31,9 +32,8 @@ public class Main {
             System.out.println("2. Calculo de rutas");
             System.out.println("3. Seleccion de cargas");
             System.out.println("4. Salir");
-            System.out.print("Seleccione una opcion: ");
 
-            opcion = scanner.nextInt();
+            opcion = leerEntero(scanner, "Seleccione una opcion: ");
 
             switch (opcion) {
                 case 1:
@@ -72,9 +72,8 @@ public class Main {
             System.out.println("3. Ordenar por prioridad");
             System.out.println("4. Buscar por ID");
             System.out.println("5. Volver");
-            System.out.print("Seleccione una opcion: ");
 
-            opcion = scanner.nextInt();
+            opcion = leerEntero(scanner, "Seleccione una opcion: ");
 
             switch (opcion) {
                 case 1:
@@ -98,10 +97,7 @@ public class Main {
                     break;
 
                 case 4:
-                    // buscar pedido por id
-                    System.out.print("ingrese el id del pedido: ");
-                    int idBuscado = scanner.nextInt();
-
+                    int idBuscado = leerEntero(scanner, "ingrese el id del pedido: ");
                     Pedido encontrado = gestor.buscarPedidoPorId(idBuscado);
 
                     if (encontrado != null) {
@@ -130,17 +126,13 @@ public class Main {
     // cargar un pedido
     private static void agregarPedido(Scanner scanner, GestorPedidos gestor, Ubicacion centro) {
 
-        System.out.print("id del pedido: ");
-        int id = scanner.nextInt();
+        int id = leerEntero(scanner, "id del pedido: ");
 
         System.out.print("fecha limite (AAAA-MM-DD): ");
-        String fecha = scanner.next();
+        String fecha = scanner.nextLine();
 
-        System.out.print("prioridad: ");
-        int prioridad = scanner.nextInt();
-
-        System.out.print("peso total: ");
-        double peso = scanner.nextDouble();
+        int prioridad = leerEntero(scanner, "prioridad: ");
+        double peso = leerDouble(scanner, "peso total: ");
 
         try {
             Pedido pedido = new Pedido(
@@ -150,6 +142,9 @@ public class Main {
             gestor.agregarPedido(pedido);
             System.out.println("pedido agregado correctamente");
 
+        } catch (DateTimeParseException e) {
+            System.out.println("error: formato de fecha incorrecto");
+
         } catch (IllegalArgumentException e) {
             System.out.println("error: " + e.getMessage());
         }
@@ -158,30 +153,23 @@ public class Main {
     // ingresar los datos para seleccionar cargas
     private static void menuCargas(Scanner scanner) {
 
+        int capacidad = leerEntero(scanner, "\ncapacidad maxima del vehiculo: ");
+        int cantidad = leerEntero(scanner, "cantidad de lotes: ");
+
+        if (cantidad < 0) {
+            System.out.println("la cantidad de lotes no puede ser negativa");
+            return;
+        }
+
         try {
-            System.out.print("\ncapacidad maxima del vehiculo: ");
-            int capacidad = scanner.nextInt();
-
-            System.out.print("cantidad de lotes: ");
-            int cantidad = scanner.nextInt();
-
-            if (cantidad < 0) {
-                System.out.println("la cantidad de lotes no puede ser negativa");
-                return;
-            }
-
             Vehiculo vehiculo = new Vehiculo(1, capacidad);
             LoteMercaderia[] lotes = new LoteMercaderia[cantidad];
 
-            // cargar los lotes
             for (int i = 0; i < cantidad; i++) {
                 System.out.println("\nlote " + (i + 1));
 
-                System.out.print("peso: ");
-                int peso = scanner.nextInt();
-
-                System.out.print("prioridad: ");
-                int prioridad = scanner.nextInt();
+                int peso = leerEntero(scanner, "peso: ");
+                int prioridad = leerEntero(scanner, "prioridad: ");
 
                 lotes[i] = new LoteMercaderia(i + 1, peso, prioridad);
             }
@@ -190,6 +178,42 @@ public class Main {
 
         } catch (IllegalArgumentException e) {
             System.out.println("error: " + e.getMessage());
+        }
+    }
+
+    // leer numeros enteros
+    private static int leerEntero(Scanner scanner, String mensaje) {
+
+        while (true) {
+            System.out.print(mensaje);
+
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("error: ingrese un numero entero valido");
+            }
+        }
+    }
+
+    // leer numeros decimales
+    private static double leerDouble(Scanner scanner, String mensaje) {
+
+        while (true) {
+            System.out.print(mensaje);
+            String entrada = scanner.nextLine().trim().replace(',', '.');
+
+            try {
+                double numero = Double.parseDouble(entrada);
+
+                if (!Double.isFinite(numero)) {
+                    throw new NumberFormatException();
+                }
+
+                return numero;
+
+            } catch (NumberFormatException e) {
+                System.out.println("error: ingrese un numero valido");
+            }
         }
     }
 }
