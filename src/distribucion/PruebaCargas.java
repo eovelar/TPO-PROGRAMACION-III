@@ -31,5 +31,10 @@ public class PruebaCargas {
         } catch (IllegalArgumentException e) {
             System.out.println("error: " + e.getMessage());
         }
+        // probar sin lotes disponibles
+        LoteMercaderia[] lotesVacios = {};
+
+        System.out.println("\nprueba sin lotes:");
+        SeleccionCargas.seleccionar(lotesVacios, vehiculo);
     }
 }
