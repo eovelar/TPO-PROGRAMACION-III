@@ -19,5 +19,17 @@ public class PruebaCargas {
         };
 
         SeleccionCargas.seleccionar(lotes, vehiculo);
+        // probar un lote con peso negativo
+        try {
+            LoteMercaderia loteInvalido = new LoteMercaderia(5, -10, 20);
+        } catch (IllegalArgumentException e) {
+            System.out.println("error: " + e.getMessage());
+        }
+        // probar un vehiculo con capacidad negativa
+        try {
+            Vehiculo vehiculoInvalido = new Vehiculo(2, -50);
+        } catch (IllegalArgumentException e) {
+            System.out.println("error: " + e.getMessage());
+        }
     }
 }

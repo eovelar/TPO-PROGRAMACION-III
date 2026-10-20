@@ -1,3 +1,4 @@
+
 package distribucion.modelo;
 
 public class Vehiculo {
@@ -6,6 +7,15 @@ public class Vehiculo {
     private int capacidadMaxima;
 
     public Vehiculo(int id, int capacidadMaxima) {
+
+        if (id <= 0) {
+            throw new IllegalArgumentException("el id debe ser positivo");
+        }
+
+        if (capacidadMaxima <= 0) {
+            throw new IllegalArgumentException("la capacidad debe ser mayor a cero");
+        }
+
         this.id = id;
         this.capacidadMaxima = capacidadMaxima;
     }
