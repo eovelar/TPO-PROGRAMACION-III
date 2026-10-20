@@ -58,5 +58,37 @@ public class PruebaPedidos {
         if (inexistente == null) {
             System.out.println("pedido 999 no encontrado");
         }
+
+        // probar un pedido con peso negativo
+        try {
+            Pedido pedidoInvalido = new Pedido(
+                    105, centro, LocalDate.of(2026, 10, 20), 3, -10
+            );
+        } catch (IllegalArgumentException e) {
+            System.out.println("error: " + e.getMessage());
+        }
+
+        // probar un pedido con destino invalido
+        try {
+            Ubicacion deposito = new Ubicacion(
+                    2, "Deposito Central", TipoUbicacion.DEPOSITO
+            );
+
+            Pedido pedidoInvalido = new Pedido(
+                    106, deposito, LocalDate.of(2026, 10, 20), 3, 20
+            );
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("error: " + e.getMessage());
+        }
+
+        // probar un pedido sin fecha
+        try {
+            Pedido pedidoInvalido = new Pedido(
+                    107, centro, null, 3, 20
+            );
+        } catch (IllegalArgumentException e) {
+            System.out.println("error: " + e.getMessage());
+        }
     }
 }
