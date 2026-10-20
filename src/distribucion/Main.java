@@ -1,10 +1,12 @@
-
 package distribucion;
 
-import distribucion.pedidos.GestorPedidos;
+import distribucion.cargas.SeleccionCargas;
+import distribucion.modelo.LoteMercaderia;
 import distribucion.modelo.Pedido;
-import distribucion.modelo.Ubicacion;
 import distribucion.modelo.TipoUbicacion;
+import distribucion.modelo.Ubicacion;
+import distribucion.modelo.Vehiculo;
+import distribucion.pedidos.GestorPedidos;
 
 import java.time.LocalDate;
 import java.util.Scanner;
@@ -42,7 +44,17 @@ public class Main {
                     break;
 
                 case 3:
-                    System.out.println("seleccion de cargas");
+                    // seleccionar cargas
+                    Vehiculo vehiculo = new Vehiculo(1, 50);
+
+                    LoteMercaderia[] lotes = {
+                            new LoteMercaderia(1, 10, 30),
+                            new LoteMercaderia(2, 20, 40),
+                            new LoteMercaderia(3, 30, 50),
+                            new LoteMercaderia(4, 40, 60)
+                    };
+
+                    SeleccionCargas.seleccionar(lotes, vehiculo);
                     break;
 
                 case 4:
@@ -79,15 +91,38 @@ public class Main {
                     break;
 
                 case 2:
-                    System.out.println("ordenar por fecha");
+                    // mostrar pedidos por fecha
+                    for (Pedido pedido : gestor.obtenerPedidosPorFecha()) {
+                        System.out.println(pedido.getId() + " - " + pedido.getFechaLimite());
+                    }
                     break;
 
                 case 3:
-                    System.out.println("ordenar por prioridad");
+                    // mostrar pedidos por prioridad
+                    for (Pedido pedido : gestor.obtenerPedidosPorPrioridad()) {
+                        System.out.println(pedido.getId() + " - prioridad: "
+                                + pedido.getPrioridad() + " - fecha: "
+                                + pedido.getFechaLimite());
+                    }
                     break;
 
                 case 4:
-                    System.out.println("buscar por id");
+                    // buscar pedido por id
+                    System.out.print("ingrese el id del pedido: ");
+                    int idBuscado = scanner.nextInt();
+
+                    Pedido encontrado = gestor.buscarPedidoPorId(idBuscado);
+
+                    if (encontrado != null) {
+                        System.out.println("pedido encontrado:");
+                        System.out.println("id: " + encontrado.getId());
+                        System.out.println("centro: " + encontrado.getCentroDestino().getNombre());
+                        System.out.println("fecha limite: " + encontrado.getFechaLimite());
+                        System.out.println("prioridad: " + encontrado.getPrioridad());
+                        System.out.println("peso: " + encontrado.getPesoTotal() + " kg");
+                    } else {
+                        System.out.println("pedido no encontrado");
+                    }
                     break;
 
                 case 5:
