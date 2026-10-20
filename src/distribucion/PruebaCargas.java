@@ -36,5 +36,16 @@ public class PruebaCargas {
 
         System.out.println("\nprueba sin lotes:");
         SeleccionCargas.seleccionar(lotesVacios, vehiculo);
+
+        // prueba lotes con la misma prioridad
+        LoteMercaderia[] lotesEmpate = {
+                new LoteMercaderia(5, 10, 20),
+                new LoteMercaderia(6, 20, 20)
+        };
+
+        Vehiculo vehiculoEmpate = new Vehiculo(3, 20);
+
+        System.out.println("\nprueba de empate:");
+        SeleccionCargas.seleccionar(lotesEmpate, vehiculoEmpate);
     }
 }
