@@ -1,3 +1,4 @@
+
 package distribucion;
 
 import distribucion.cargas.SeleccionCargas;
@@ -44,17 +45,7 @@ public class Main {
                     break;
 
                 case 3:
-                    // seleccionar cargas
-                    Vehiculo vehiculo = new Vehiculo(1, 50);
-
-                    LoteMercaderia[] lotes = {
-                            new LoteMercaderia(1, 10, 30),
-                            new LoteMercaderia(2, 20, 40),
-                            new LoteMercaderia(3, 30, 50),
-                            new LoteMercaderia(4, 40, 60)
-                    };
-
-                    SeleccionCargas.seleccionar(lotes, vehiculo);
+                    menuCargas(scanner);
                     break;
 
                 case 4:
@@ -158,6 +149,44 @@ public class Main {
 
             gestor.agregarPedido(pedido);
             System.out.println("pedido agregado correctamente");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("error: " + e.getMessage());
+        }
+    }
+
+    // ingresar los datos para seleccionar cargas
+    private static void menuCargas(Scanner scanner) {
+
+        try {
+            System.out.print("\ncapacidad maxima del vehiculo: ");
+            int capacidad = scanner.nextInt();
+
+            System.out.print("cantidad de lotes: ");
+            int cantidad = scanner.nextInt();
+
+            if (cantidad < 0) {
+                System.out.println("la cantidad de lotes no puede ser negativa");
+                return;
+            }
+
+            Vehiculo vehiculo = new Vehiculo(1, capacidad);
+            LoteMercaderia[] lotes = new LoteMercaderia[cantidad];
+
+            // cargar los lotes
+            for (int i = 0; i < cantidad; i++) {
+                System.out.println("\nlote " + (i + 1));
+
+                System.out.print("peso: ");
+                int peso = scanner.nextInt();
+
+                System.out.print("prioridad: ");
+                int prioridad = scanner.nextInt();
+
+                lotes[i] = new LoteMercaderia(i + 1, peso, prioridad);
+            }
+
+            SeleccionCargas.seleccionar(lotes, vehiculo);
 
         } catch (IllegalArgumentException e) {
             System.out.println("error: " + e.getMessage());
