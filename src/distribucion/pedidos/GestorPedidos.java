@@ -13,6 +13,15 @@ public class GestorPedidos {
 
     // agregar un pedido
     public void agregarPedido(Pedido pedido) {
+
+        if (pedido == null) {
+            throw new IllegalArgumentException("el pedido no puede ser nulo");
+        }
+
+        if (buscarPedidoPorId(pedido.getId()) != null) {
+            throw new IllegalArgumentException("ya existe un pedido con ese id");
+        }
+
         pedidos.add(pedido);
     }
     // ordenar los pedidos por fecha
@@ -44,4 +53,6 @@ public class GestorPedidos {
 
         return BusquedaBinariaPedidos.buscarPorId(arreglo, id);
     }
+
+
 }

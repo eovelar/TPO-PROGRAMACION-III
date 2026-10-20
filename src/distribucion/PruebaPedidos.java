@@ -11,7 +11,8 @@ import java.time.LocalDate;
 public class PruebaPedidos {
 
     public static void main(String[] args) {
-        // probar con la lista vacía
+
+        // probar con la lista vacia
         GestorPedidos gestorVacio = new GestorPedidos();
 
         System.out.println("pedidos vacios: "
@@ -19,6 +20,7 @@ public class PruebaPedidos {
 
         System.out.println("busqueda sin pedidos: "
                 + gestorVacio.buscarPedidoPorId(100));
+
         Ubicacion centro = new Ubicacion(
                 1, "Centro Norte", TipoUbicacion.CENTRO_COMUNITARIO
         );
@@ -77,7 +79,6 @@ public class PruebaPedidos {
             Pedido pedidoInvalido = new Pedido(
                     106, deposito, LocalDate.of(2026, 10, 20), 3, 20
             );
-
         } catch (IllegalArgumentException e) {
             System.out.println("error: " + e.getMessage());
         }
@@ -87,6 +88,15 @@ public class PruebaPedidos {
             Pedido pedidoInvalido = new Pedido(
                     107, centro, null, 3, 20
             );
+        } catch (IllegalArgumentException e) {
+            System.out.println("error: " + e.getMessage());
+        }
+
+        // probar un pedido duplicado
+        try {
+            gestor.agregarPedido(new Pedido(
+                    101, centro, LocalDate.of(2026, 10, 25), 4, 15
+            ));
         } catch (IllegalArgumentException e) {
             System.out.println("error: " + e.getMessage());
         }
