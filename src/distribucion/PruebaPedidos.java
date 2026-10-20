@@ -11,7 +11,14 @@ import java.time.LocalDate;
 public class PruebaPedidos {
 
     public static void main(String[] args) {
+        // probar con la lista vacía
+        GestorPedidos gestorVacio = new GestorPedidos();
 
+        System.out.println("pedidos vacios: "
+                + gestorVacio.obtenerPedidosPorFecha().length);
+
+        System.out.println("busqueda sin pedidos: "
+                + gestorVacio.buscarPedidoPorId(100));
         Ubicacion centro = new Ubicacion(
                 1, "Centro Norte", TipoUbicacion.CENTRO_COMUNITARIO
         );
