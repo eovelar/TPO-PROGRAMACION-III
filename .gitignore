@@ -1,0 +1,15 @@
+# Archivos compilados
+out/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# VS Code
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
