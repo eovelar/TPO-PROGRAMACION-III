@@ -1,0 +1,63 @@
+
+package distribucion.modelo;
+
+import java.time.LocalDate;
+
+public class Pedido {
+
+    private int id;
+    private Ubicacion centroDestino;
+    private LocalDate fechaLimite;
+    private int prioridad;
+    private double pesoTotal;
+
+    public Pedido(int id, Ubicacion centroDestino, LocalDate fechaLimite,
+                  int prioridad, double pesoTotal) {
+
+        if (id <= 0) {
+            throw new IllegalArgumentException("el id debe ser positivo");
+        }
+
+        if (centroDestino == null || centroDestino.getTipo() != TipoUbicacion.CENTRO_COMUNITARIO) {
+            throw new IllegalArgumentException("el destino debe ser un centro comunitario");
+        }
+
+        if (fechaLimite == null) {
+            throw new IllegalArgumentException("la fecha limite no puede ser nula");
+        }
+
+        if (prioridad < 0) {
+            throw new IllegalArgumentException("la prioridad no puede ser negativa");
+        }
+
+        if (pesoTotal <= 0) {
+            throw new IllegalArgumentException("el peso debe ser mayor a cero");
+        }
+
+        this.id = id;
+        this.centroDestino = centroDestino;
+        this.fechaLimite = fechaLimite;
+        this.prioridad = prioridad;
+        this.pesoTotal = pesoTotal;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Ubicacion getCentroDestino() {
+        return centroDestino;
+    }
+
+    public LocalDate getFechaLimite() {
+        return fechaLimite;
+    }
+
+    public int getPrioridad() {
+        return prioridad;
+    }
+
+    public double getPesoTotal() {
+        return pesoTotal;
+    }
+}
