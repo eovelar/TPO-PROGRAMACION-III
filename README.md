@@ -1,125 +1,132 @@
-# TPO Programacion III
-## Planificacion de rutas y distribucion de ayuda
 
-Proyecto desarrollado en **Java** para gestionar pedidos, calcular rutas de distribucion y optimizar la carga de vehiculos.
+# TPO Programación III
 
-**Integrantes:** Ovelar Evangelina, Peralta Luka
+## Planificación de rutas y distribución de ayuda
 
----
+Trabajo Práctico Obligatorio desarrollado en **Java** para la materia Programación III.
 
-## Propuesta elegida
+**Integrantes:**
+- Ovelar Evangelina
+- Peralta Luka
 
-Propuesta 2: Planificacion de rutas y distribucion de ayuda.
+### Descripción del proyecto
 
-El sistema administra depositos, centros comunitarios, conexiones viales, vehiculos, pedidos y lotes de mercaderia.
+El sistema permite organizar pedidos de ayuda, calcular rutas de distribución entre depósitos y centros comunitarios, y seleccionar cargas prioritarias según la capacidad disponible de los vehículos.
 
----
+Para resolver estas funcionalidades se implementaron distintos algoritmos utilizando las estrategias estudiadas en la materia.
 
-## Funcionalidades obligatorias (primera etapa)
+## Funcionalidades implementadas
 
-1. **Organizacion y consulta de pedidos** - Ordenamiento por fecha limite y prioridad, busqueda por identificador.
-2. **Calculo de la ruta mas rapida** - Algoritmo de Dijkstra sobre la red vial dirigida.
-3. **Seleccion de cargas prioritarias** - Problema de la mochila 0/1 mediante Programacion Dinamica.
+### 1. Organización y consulta de pedidos
 
-## Funcionalidades adicionales (segunda etapa)
+Permite registrar pedidos, ordenarlos por fecha límite o prioridad y buscarlos mediante su identificador.
 
-- **A1:** Consultas de rutas entre todos los centros (Floyd-Warshall).
-- **B1:** Recorrido con multiples entregas (Backtracking).
-- **B3:** Rutas alternativas con restricciones (Backtracking).
+**Algoritmos utilizados:**
+- Merge Sort para ordenar los pedidos.
+- Búsqueda binaria para localizar pedidos por ID.
 
----
+**Estrategia:** Divide y Conquista para el ordenamiento.
 
-## Estrategias algoritmicas aplicadas
+### 2. Cálculo de la ruta más rápida
 
-| Funcionalidad | Estrategia | Justificacion |
-|---|---|---|
-| Ordenamiento de pedidos | Divide y Conquista (Merge Sort) | Permite ordenar volumenes crecientes de pedidos en O(n log n) sin depender de metodos provistos por Java. |
-| Busqueda de pedidos | Busqueda binaria | Requiere el arreglo previamente ordenado; complejidad O(log n). |
-| Calculo de ruta mas rapida | Greedy (Dijkstra) | Los tiempos de viaje son positivos, lo que garantiza la optimalidad del enfoque voraz. Complejidad O(V^2). |
-| Seleccion de cargas | Programacion Dinamica (mochila 0/1) | Los lotes no se fraccionan; la programacion dinamica explora todas las combinaciones sin redundancia. |
+Permite encontrar el recorrido de menor tiempo entre dos ubicaciones de una red vial dirigida.
 
----
+También permite deshabilitar conexiones, recalcular rutas y detectar destinos inaccesibles.
+
+**Algoritmo utilizado:** Dijkstra.
+
+**Estrategia:** Greedy.
+
+### 3. Selección de cargas prioritarias
+
+Permite seleccionar los lotes de mercadería que alcanzan la mayor prioridad total sin superar la capacidad del vehículo.
+
+Los lotes no pueden fraccionarse ni seleccionarse más de una vez.
+
+**Algoritmo utilizado:** Mochila 0/1.
+
+**Estrategia:** Programación Dinámica.
 
 ## Estructura del proyecto
 
+```text
+src/
+└── distribucion/
+    ├── Main.java
+    ├── PruebaPedidos.java
+    ├── PruebaCargas.java
+    ├── TestAlgoritmos.java
+    │
+    ├── modelo/
+    │   ├── TipoUbicacion.java
+    │   ├── Ubicacion.java
+    │   ├── ConexionVial.java
+    │   ├── Pedido.java
+    │   ├── LoteMercaderia.java
+    │   └── Vehiculo.java
+    │
+    ├── pedidos/
+    │   ├── GestorPedidos.java
+    │   ├── MergeSortPedidos.java
+    │   └── BusquedaBinariaPedidos.java
+    │
+    ├── cargas/
+    │   └── SeleccionCargas.java
+    │
+    └── rutas/
+        ├── RedVial.java
+        ├── Dijkstra.java
+        ├── ResultadoRuta.java
+        └── PruebaRutas.java
 ```
-src/distribucion/
-    modelo/
-        TipoUbicacion.java        Enum: DEPOSITO, CENTRO_COMUNITARIO
-        Ubicacion.java             Atributos: id, nombre, tipo. Getters y validaciones.
-        ConexionVial.java          Conexion dirigida con tiempo de viaje y estado habilitado/deshabilitado.
-        Pedido.java                Atributos del pedido: id, centro destino, fecha limite, prioridad, peso.
-        LoteMercaderia.java        Lote con identificador, peso y puntaje de prioridad.
-        Vehiculo.java              Vehiculo con capacidad maxima de carga.
-    pedidos/
-        MergeSortPedidos.java      Ordenamiento por fecha, prioridad e ID (Divide y Conquista).
-        BusquedaBinariaPedidos.java Busqueda por ID sobre arreglo ordenado.
-        GestorPedidos.java         Registro, ordenamiento, busqueda y rechazo de duplicados.
-    cargas/
-        SeleccionCargas.java       Mochila 0/1 mediante Programacion Dinamica.
-    rutas/
-        RedVial.java               Grafo dirigido: ubicaciones y conexiones con soporte de deshabilitacion.
-        Dijkstra.java              Algoritmo de ruta de menor tiempo (Greedy). Complejidad O(V^2).
-        ResultadoRuta.java         Resultado del calculo: existencia de ruta, recorrido, tiempo y decisiones.
-        PruebaRutas.java           Pruebas del modulo de rutas sobre red ficticia.
-    Main.java                      Menu interactivo del sistema.
-    PruebaPedidos.java             Pruebas manuales del modulo de pedidos.
-    PruebaCargas.java              Pruebas manuales del modulo de cargas.
-    TestAlgoritmos.java            Pruebas automaticas del sistema.
-```
 
----
+## Ejecución
 
-## Modulo de rutas (Luka)
+1. Clonar el repositorio.
+2. Abrir el proyecto en IntelliJ IDEA.
+3. Configurar un JDK compatible.
+4. Ejecutar la clase `distribucion.Main`.
 
-### Descripcion
+El programa utiliza un menú interactivo por consola con las tres funcionalidades principales.
 
-El modulo de rutas resuelve la funcionalidad obligatoria numero 2: calculo de la ruta mas rapida entre dos ubicaciones de la red vial.
+## Pruebas
 
-La red vial se modela como un **grafo dirigido con pesos positivos**, donde los nodos son ubicaciones (depositos y centros comunitarios) y las aristas son conexiones viales con un tiempo de viaje en minutos. Una conexion de A hacia B no implica la existencia de una conexion de B hacia A.
+Se incluyeron clases de prueba para verificar los algoritmos y distintos casos particulares.
 
-### Algoritmo utilizado: Dijkstra
+- `PruebaPedidos.java`: ordenamientos, búsquedas y validaciones.
+- `PruebaCargas.java`: selección de lotes, capacidades y casos límite.
+- `PruebaRutas.java`: rutas mínimas, conexiones deshabilitadas y destinos inaccesibles.
+- `TestAlgoritmos.java`: pruebas automáticas de pedidos y cargas.
 
-**Estrategia:** Greedy (algoritmo voraz).
+Los módulos se probaron individualmente y se integraron en el menú principal.
 
-En cada iteracion, el algoritmo selecciona el nodo no visitado con menor tiempo acumulado y relaja las distancias de sus vecinos. Esta decision localmente optima conduce a la solucion global optima porque todos los pesos son estrictamente positivos, condicion garantizada por la consigna.
+## Complejidades temporales
 
-**Complejidad temporal:** O(V^2), donde V es la cantidad de ubicaciones en la red. En cada iteracion se recorre la lista de nodos no visitados para encontrar el minimo.
+| Algoritmo | Complejidad |
+|---|---|
+| Merge Sort | O(n log n) |
+| Búsqueda binaria | O(log n) |
+| Dijkstra | O(V² + V·E) |
+| Mochila 0/1 | O(n × C) |
 
-**Alternativas consideradas y descartadas:**
-- BFS: no considera pesos diferentes en las aristas.
-- Bellman-Ford: soporta pesos negativos pero tiene complejidad O(V * E), innecesaria dado que todos los tiempos son positivos.
-- Floyd-Warshall: calcula las distancias entre todos los pares de nodos; resulta excesivo para una consulta puntual entre un origen y un destino.
+La búsqueda binaria requiere ordenar previamente los pedidos por ID. En nuestra implementación, el método completo de búsqueda tiene un costo O(n log n).
 
-### Funcionalidades implementadas
+## Funcionalidades para la segunda entrega
 
-- Calculo de la ruta de menor tiempo entre un origen y un destino.
-- Reconstruccion del recorrido completo (secuencia de ubicaciones).
-- Visualizacion de las decisiones tomadas durante el calculo.
-- Deshabilitacion de conexiones y recalculo de la ruta.
-- Deteccion de destinos inaccesibles.
-- Manejo del caso en que origen y destino coinciden.
+Se seleccionaron las siguientes funcionalidades adicionales:
 
-### Casos de prueba (PruebaRutas.java)
+- **A1:** Consultas de rutas entre todos los centros.
+- **B1:** Recorrido con múltiples entregas.
+- **B3:** Rutas alternativas con restricciones.
 
-Se utiliza una red ficticia con 5 ubicaciones y 6 conexiones dirigidas.
+Estas funcionalidades corresponden a la segunda etapa del trabajo.
 
-| Caso | Descripcion | Resultado esperado | Estado |
-|---|---|---|---|
-| 1 | Ruta normal: Deposito Central a Centro Este | Ruta 1-2-4, tiempo 15 min | Correcto |
-| 2 | Deshabilitar conexion Norte-Este y recalcular | Ruta alternativa 1-3-4, tiempo 23 min | Correcto |
-| 3 | Destino inaccesible: Centro Este a Deposito Central | Sin ruta disponible | Correcto |
-| 4 | Origen igual a destino | Tiempo 0 min | Correcto |
+## Organización del equipo
 
-Resultado: 4 pruebas ejecutadas, 0 errores.
+El desarrollo se realizó utilizando Git y GitHub, con ramas individuales para registrar los avances de cada integrante.
 
----
+- `eva`: pedidos, cargas y menú del sistema.
+- `Luka`: red vial, Dijkstra y pruebas de rutas.
+- `main`: integración de los módulos.
 
-## Division del trabajo
-
-| Integrante | Rama | Responsabilidades |
-|---|---|---|
-| Ovelar Evangelina | `eva` | Organizacion y consulta de pedidos, Merge Sort, busqueda binaria, seleccion de cargas prioritarias (Programacion Dinamica), pruebas y menu interactivo. |
-| Peralta Luka | `Luka` | Red vial, calculo de rutas con Dijkstra, deshabilitacion de conexiones y pruebas de rutas. |
-
-La rama `main` contiene la base compartida y la integracion de avances probados.
+La documentación técnica, las justificaciones de los algoritmos y el análisis de complejidad se encuentran desarrollados en el informe parcial.
