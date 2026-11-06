@@ -1,0 +1,5 @@
+1;Deposito Central;DEPOSITO
+2;Centro Norte;CENTRO_COMUNITARIO
+3;Centro Sur;CENTRO_COMUNITARIO
+4;Centro Este;CENTRO_COMUNITARIO
+5;Deposito Secundario;DEPOSITO
