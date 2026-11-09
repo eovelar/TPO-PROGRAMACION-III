@@ -1,14 +1,14 @@
 
-package distribucion;
+package distribucion.pruebas;
 
-import distribucion.cargas.SeleccionCargas;
+import distribucion.algoritmos.SeleccionCargas;
 import distribucion.modelo.LoteMercaderia;
 import distribucion.modelo.Pedido;
 import distribucion.modelo.TipoUbicacion;
 import distribucion.modelo.Ubicacion;
 import distribucion.modelo.Vehiculo;
-import distribucion.pedidos.BusquedaBinariaPedidos;
-import distribucion.pedidos.MergeSortPedidos;
+import distribucion.algoritmos.BusquedaBinariaPedidos;
+import distribucion.algoritmos.MergeSortPedidos;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

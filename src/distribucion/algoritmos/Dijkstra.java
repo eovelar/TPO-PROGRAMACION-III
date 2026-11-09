@@ -1,7 +1,10 @@
-package distribucion.rutas;
+package distribucion.algoritmos;
 
 import distribucion.modelo.ConexionVial;
 import distribucion.modelo.Ubicacion;
+import distribucion.rutas.RedVial;
+import distribucion.rutas.ResultadoRuta;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

@@ -1,9 +1,9 @@
 
-package distribucion;
+package distribucion.pruebas;
 
 import distribucion.modelo.LoteMercaderia;
 import distribucion.modelo.Vehiculo;
-import distribucion.cargas.SeleccionCargas;
+import distribucion.algoritmos.SeleccionCargas;
 
 public class PruebaCargas {
 

@@ -1,4 +1,4 @@
-package distribucion.cargas;
+package distribucion.algoritmos;
 
 import distribucion.modelo.LoteMercaderia;
 import distribucion.modelo.Vehiculo;

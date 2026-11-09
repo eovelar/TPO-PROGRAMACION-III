@@ -1,10 +1,10 @@
 
-package distribucion;
+package distribucion.pruebas;
 
 import distribucion.modelo.Pedido;
 import distribucion.modelo.Ubicacion;
 import distribucion.modelo.TipoUbicacion;
-import distribucion.pedidos.GestorPedidos;
+import distribucion.servicios.GestorPedidos;
 
 import java.time.LocalDate;
 

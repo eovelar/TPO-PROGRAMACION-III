@@ -85,7 +85,7 @@ src/
 1. Clonar el repositorio.
 2. Abrir el proyecto en IntelliJ IDEA.
 3. Configurar un JDK compatible.
-4. Ejecutar la clase `distribucion.Main`.
+4. Ejecutar la clase `distribucion.vista.Main`.
 
 El programa utiliza un menú interactivo por consola con las tres funcionalidades principales.
 

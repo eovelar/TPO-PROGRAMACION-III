@@ -1,5 +1,7 @@
-package distribucion.pedidos;
+package distribucion.servicios;
 
+import distribucion.algoritmos.BusquedaBinariaPedidos;
+import distribucion.algoritmos.MergeSortPedidos;
 import distribucion.modelo.Pedido;
 import java.util.ArrayList;
 

@@ -1,7 +1,9 @@
 
-package distribucion.rutas;
+package distribucion.pruebas;
 
 import distribucion.persistencia.LectorDatos;
+import distribucion.algoritmos.FloydWarshall;
+import distribucion.rutas.RedVial;
 
 import java.io.IOException;
 

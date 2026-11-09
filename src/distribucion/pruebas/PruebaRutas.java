@@ -1,8 +1,11 @@
-package distribucion.rutas;
+package distribucion.pruebas;
 
 import distribucion.modelo.ConexionVial;
 import distribucion.modelo.TipoUbicacion;
 import distribucion.modelo.Ubicacion;
+import distribucion.algoritmos.Dijkstra;
+import distribucion.rutas.RedVial;
+import distribucion.rutas.ResultadoRuta;
 
 /**
  * Pruebas del módulo de rutas sobre una red vial ficticia.

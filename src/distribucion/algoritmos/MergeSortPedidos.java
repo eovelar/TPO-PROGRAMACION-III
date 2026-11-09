@@ -1,5 +1,5 @@
 
-package distribucion.pedidos;
+package distribucion.algoritmos;
 
 import distribucion.modelo.Pedido;
 
