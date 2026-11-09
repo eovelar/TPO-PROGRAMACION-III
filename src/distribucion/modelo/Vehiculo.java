@@ -12,8 +12,8 @@ public class Vehiculo {
             throw new IllegalArgumentException("el id debe ser positivo");
         }
 
-        if (capacidadMaxima <= 0) {
-            throw new IllegalArgumentException("la capacidad debe ser mayor a cero");
+        if (capacidadMaxima < 0) {
+            throw new IllegalArgumentException("la capacidad no puede ser negativa");
         }
 
         this.id = id;

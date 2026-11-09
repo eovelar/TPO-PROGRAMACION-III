@@ -97,7 +97,6 @@ public class RutasAlternativas {
         // recorrer las conexiones de la ubicacion actual
         for (ConexionVial conexion : red.getConexionesDesde(actual)) {
 
-            // ignorar conexiones deshabilitadas
             if (!conexion.isHabilitada()) {
                 continue;
             }
@@ -105,17 +104,12 @@ public class RutasAlternativas {
             Ubicacion siguiente = conexion.getDestino();
             int idSiguiente = siguiente.getId();
 
-            // evitar ubicaciones prohibidas
-            if (prohibidas.contains(idSiguiente)) {
+            // evitar ubicaciones prohibidas o repetidas
+            if (prohibidas.contains(idSiguiente) ||
+                    visitadas.contains(idSiguiente)) {
                 continue;
             }
 
-            // evitar repetir ubicaciones en un mismo camino
-            if (visitadas.contains(idSiguiente)) {
-                continue;
-            }
-
-            // calcular el tiempo acumulado
             long nuevoTiempo =
                     (long) tiempoActual + conexion.getTiempoMinutos();
 
@@ -124,7 +118,6 @@ public class RutasAlternativas {
                 continue;
             }
 
-            // avanzar a la siguiente ubicacion
             visitadas.add(idSiguiente);
             caminoActual.add(siguiente);
 
@@ -171,6 +164,9 @@ public class RutasAlternativas {
                     System.out.print(" -> ");
                 }
             }
+
+            // separar el recorrido del tiempo total
+            System.out.println();
 
             System.out.println(
                     "tiempo total: " + tiempos.get(i) + " minutos"

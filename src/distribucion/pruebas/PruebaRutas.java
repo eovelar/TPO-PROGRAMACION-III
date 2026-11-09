@@ -1,142 +1,235 @@
+
 package distribucion.pruebas;
 
-import distribucion.modelo.ConexionVial;
+import distribucion.algoritmos.Dijkstra;
 import distribucion.modelo.TipoUbicacion;
 import distribucion.modelo.Ubicacion;
-import distribucion.algoritmos.Dijkstra;
+import distribucion.persistencia.LectorDatos;
 import distribucion.rutas.RedVial;
 import distribucion.rutas.ResultadoRuta;
 
-/**
- * Pruebas del módulo de rutas sobre una red vial ficticia.
- *
- * Red de prueba:
- *   Depósito Central (1) --10--> Centro Norte (2) --5--> Centro Este (4)
- *        |                            |
- *       15                           20
- *        v                            v
- *   Centro Sur (3) ----8-----------> Centro Este (4)
- *   Centro Norte (2) --12--> Depósito Secundario (5)
- *
- * Casos:
- *   1. Ruta normal (ruta óptima: 1->2->4, 15 min)
- *   2. Recálculo al deshabilitar conexión Norte->Este (alternativa: 1->3->4, 23 min)
- *   3. Destino inaccesible (no hay vuelta desde Centro Este a Depósito Central)
- *   4. Origen igual a destino (tiempo 0)
- */
+import java.io.IOException;
+import java.util.List;
+
 public class PruebaRutas {
 
-    private static int pruebas = 0;
-    private static int errores = 0;
+    private static int correctas = 0;
+    private static int fallidas = 0;
 
     public static void main(String[] args) {
-        System.out.println("========================================");
-        System.out.println("  PRUEBAS - MÓDULO RUTAS VIALES");
-        System.out.println("========================================");
 
-        RedVial red = construirRedFicticia();
-        red.mostrarRed();
+        System.out.println("=== PRUEBAS DE DIJKSTRA ===");
+
+        try {
+            RedVial red = LectorDatos.cargarRed(
+                    "datos/ubicaciones.txt",
+                    "datos/conexiones.txt"
+            );
+
+            Dijkstra dijkstra = new Dijkstra(red);
+
+            Ubicacion deposito = red.buscarUbicacionPorId(1);
+            Ubicacion norte = red.buscarUbicacionPorId(2);
+            Ubicacion sur = red.buscarUbicacionPorId(3);
+            Ubicacion este = red.buscarUbicacionPorId(4);
+
+            if (deposito == null || norte == null ||
+                    sur == null || este == null) {
+                throw new IllegalStateException(
+                        "faltan ubicaciones de prueba en los txt"
+                );
+            }
+
+            // prueba 1: camino minimo
+            ResultadoRuta normal =
+                    dijkstra.calcularRuta(deposito, este);
+
+            comprobarRuta(
+                    "ruta mas rapida",
+                    normal,
+                    15,
+                    1, 2, 4
+            );
+
+            // prueba 2: conexion deshabilitada
+            red.deshabilitarConexion(2, 4);
+
+            ResultadoRuta alternativa =
+                    dijkstra.calcularRuta(deposito, este);
+
+            comprobarRuta(
+                    "recalculo con conexion deshabilitada",
+                    alternativa,
+                    23,
+                    1, 3, 4
+            );
+
+            // prueba 3: restaurar la conexion
+            red.habilitarConexion(2, 4);
+
+            ResultadoRuta restaurada =
+                    dijkstra.calcularRuta(deposito, este);
+
+            comprobarRuta(
+                    "conexion habilitada nuevamente",
+                    restaurada,
+                    15,
+                    1, 2, 4
+            );
+
+            // prueba 4: origen igual a destino
+            ResultadoRuta mismoLugar =
+                    dijkstra.calcularRuta(deposito, deposito);
+
+            comprobarRuta(
+                    "origen igual a destino",
+                    mismoLugar,
+                    0,
+                    1
+            );
+
+            // prueba 5: destino sin camino posible
+            ResultadoRuta inaccesible =
+                    dijkstra.calcularRuta(este, norte);
+
+            // aislar una ubicacion para probar inaccesibilidad
+            boolean inaccesibilidadComprobada =
+                    probarDestinoInaccesible();
+
+            registrar(
+                    "destino inalcanzable",
+                    inaccesibilidadComprobada
+            );
+
+            // prueba 6: origen nulo
+            probarError("origen nulo", () ->
+                    dijkstra.calcularRuta(null, este)
+            );
+
+            // prueba 7: destino nulo
+            probarError("destino nulo", () ->
+                    dijkstra.calcularRuta(deposito, null)
+            );
+
+            // prueba 8: ubicacion inexistente
+            Ubicacion desconocida = new Ubicacion(
+                    999,
+                    "Ubicacion desconocida",
+                    TipoUbicacion.CENTRO_COMUNITARIO
+            );
+
+            probarError("ubicacion fuera de la red", () ->
+                    dijkstra.calcularRuta(deposito, desconocida)
+            );
+
+            // prueba 9: red nula
+            probarError("red nula", () ->
+                    new Dijkstra(null)
+            );
+
+            // prueba 10: comparar distintas alternativas
+            comprobarRuta(
+                    "mejor camino frente a una alternativa mas larga",
+                    dijkstra.calcularRuta(deposito, este),
+                    15,
+                    1, 2, 4
+            );
+
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "no se pudieron cargar los archivos de prueba", e
+            );
+        }
+
+        System.out.println("\n=== RESULTADO FINAL ===");
+        System.out.println("pruebas correctas: " + correctas);
+        System.out.println("pruebas fallidas: " + fallidas);
+
+        if (fallidas > 0) {
+            throw new AssertionError(
+                    "hay pruebas de rutas que no pasaron"
+            );
+        }
+    }
+
+    // comprobar el tiempo y el recorrido
+    private static void comprobarRuta(
+            String nombre,
+            ResultadoRuta resultado,
+            int tiempoEsperado,
+            int... idsEsperados) {
+
+        boolean correcta = resultado.isExisteRuta()
+                && resultado.getTiempoTotal() == tiempoEsperado;
+
+        if (correcta) {
+            List<Ubicacion> recorrido = resultado.getRecorrido();
+
+            correcta = recorrido != null
+                    && recorrido.size() == idsEsperados.length;
+
+            if (correcta) {
+                for (int i = 0; i < idsEsperados.length; i++) {
+                    if (recorrido.get(i).getId() != idsEsperados[i]) {
+                        correcta = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        registrar(nombre, correcta);
+    }
+
+    // comprobar una red sin conexiones
+    private static boolean probarDestinoInaccesible() {
+
+        RedVial red = new RedVial();
+
+        Ubicacion origen = new Ubicacion(
+                1, "Deposito", TipoUbicacion.DEPOSITO
+        );
+
+        Ubicacion destino = new Ubicacion(
+                2, "Centro aislado", TipoUbicacion.CENTRO_COMUNITARIO
+        );
+
+        red.agregarUbicacion(origen);
+        red.agregarUbicacion(destino);
 
         Dijkstra dijkstra = new Dijkstra(red);
 
-        prueba1_RutaNormal(dijkstra, red);
-        prueba2_DeshabilitarConexion(dijkstra, red);
-        prueba3_DestinoInaccesible(dijkstra, red);
-        prueba4_OrigenIgualDestino(dijkstra, red);
+        ResultadoRuta resultado =
+                dijkstra.calcularRuta(origen, destino);
 
-        System.out.println("\n========================================");
-        System.out.println("Resultado: " + pruebas + " pruebas, " + errores + " errores.");
-        System.out.println("========================================");
+        return !resultado.isExisteRuta();
     }
 
-    private static RedVial construirRedFicticia() {
-        RedVial red = new RedVial();
+    // comprobar entradas invalidas
+    private static void probarError(
+            String nombre,
+            Runnable prueba) {
 
-        Ubicacion deposito1   = new Ubicacion(1, "Deposito Central",    TipoUbicacion.DEPOSITO);
-        Ubicacion centroNorte = new Ubicacion(2, "Centro Norte",         TipoUbicacion.CENTRO_COMUNITARIO);
-        Ubicacion centroSur   = new Ubicacion(3, "Centro Sur",           TipoUbicacion.CENTRO_COMUNITARIO);
-        Ubicacion centroEste  = new Ubicacion(4, "Centro Este",          TipoUbicacion.CENTRO_COMUNITARIO);
-        Ubicacion deposito2   = new Ubicacion(5, "Deposito Secundario",  TipoUbicacion.DEPOSITO);
+        try {
+            prueba.run();
+            registrar(nombre, false);
 
-        red.agregarUbicacion(deposito1);
-        red.agregarUbicacion(centroNorte);
-        red.agregarUbicacion(centroSur);
-        red.agregarUbicacion(centroEste);
-        red.agregarUbicacion(deposito2);
-
-        red.agregarConexion(new ConexionVial(deposito1,   centroNorte, 10));
-        red.agregarConexion(new ConexionVial(deposito1,   centroSur,   15));
-        red.agregarConexion(new ConexionVial(centroNorte, centroEste,   5));
-        red.agregarConexion(new ConexionVial(centroNorte, deposito2,   12));
-        red.agregarConexion(new ConexionVial(centroSur,   centroEste,   8));
-        red.agregarConexion(new ConexionVial(centroNorte, centroSur,   20));
-
-        return red;
-    }
-
-    private static void prueba1_RutaNormal(Dijkstra dijkstra, RedVial red) {
-        pruebas++;
-        System.out.println("\n--- Prueba 1: Ruta normal (Deposito Central -> Centro Este) ---");
-        Ubicacion origen  = red.buscarUbicacionPorId(1);
-        Ubicacion destino = red.buscarUbicacionPorId(4);
-        ResultadoRuta resultado = dijkstra.calcularRuta(origen, destino);
-        resultado.mostrar();
-        // Optimo: 1->2->4 = 10+5 = 15 min
-        if (!resultado.isExisteRuta() || resultado.getTiempoTotal() != 15) {
-            System.out.println("[ERROR] Se esperaba ruta con tiempo 15. Obtenido: "
-                    + (resultado.isExisteRuta() ? resultado.getTiempoTotal() : "sin ruta"));
-            errores++;
-        } else {
-            System.out.println("[OK] Ruta encontrada: 15 minutos.");
+        } catch (IllegalArgumentException e) {
+            registrar(nombre, true);
         }
     }
 
-    private static void prueba2_DeshabilitarConexion(Dijkstra dijkstra, RedVial red) {
-        pruebas++;
-        System.out.println("\n--- Prueba 2: Deshabilitar Norte->Este y recalcular ---");
-        red.deshabilitarConexion(2, 4);
-        Ubicacion origen  = red.buscarUbicacionPorId(1);
-        Ubicacion destino = red.buscarUbicacionPorId(4);
-        ResultadoRuta resultado = dijkstra.calcularRuta(origen, destino);
-        resultado.mostrar();
-        // Alternativa: 1->3->4 = 15+8 = 23 min
-        if (!resultado.isExisteRuta() || resultado.getTiempoTotal() != 23) {
-            System.out.println("[ERROR] Se esperaba ruta alternativa con tiempo 23. Obtenido: "
-                    + (resultado.isExisteRuta() ? resultado.getTiempoTotal() : "sin ruta"));
-            errores++;
-        } else {
-            System.out.println("[OK] Ruta alternativa correcta: 23 minutos.");
-        }
-        red.habilitarConexion(2, 4);
-    }
+    private static void registrar(
+            String nombre,
+            boolean correcta) {
 
-    private static void prueba3_DestinoInaccesible(Dijkstra dijkstra, RedVial red) {
-        pruebas++;
-        System.out.println("\n--- Prueba 3: Destino inaccesible (Centro Este -> Deposito Central) ---");
-        Ubicacion origen  = red.buscarUbicacionPorId(4);
-        Ubicacion destino = red.buscarUbicacionPorId(1);
-        ResultadoRuta resultado = dijkstra.calcularRuta(origen, destino);
-        resultado.mostrar();
-        if (resultado.isExisteRuta()) {
-            System.out.println("[ERROR] Se esperaba destino inaccesible.");
-            errores++;
-        } else {
-            System.out.println("[OK] Destino correctamente identificado como inaccesible.");
-        }
-    }
+        if (correcta) {
+            correctas++;
+            System.out.println("[OK] " + nombre);
 
-    private static void prueba4_OrigenIgualDestino(Dijkstra dijkstra, RedVial red) {
-        pruebas++;
-        System.out.println("\n--- Prueba 4: Origen igual a destino ---");
-        Ubicacion origen  = red.buscarUbicacionPorId(1);
-        Ubicacion destino = red.buscarUbicacionPorId(1);
-        ResultadoRuta resultado = dijkstra.calcularRuta(origen, destino);
-        resultado.mostrar();
-        if (!resultado.isExisteRuta() || resultado.getTiempoTotal() != 0) {
-            System.out.println("[ERROR] Se esperaba ruta con tiempo 0.");
-            errores++;
         } else {
-            System.out.println("[OK] Origen igual a destino: tiempo 0 correcto.");
+            fallidas++;
+            System.out.println("[ERROR] " + nombre);
         }
     }
 }

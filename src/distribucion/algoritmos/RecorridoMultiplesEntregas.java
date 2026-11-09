@@ -1,6 +1,7 @@
 
 package distribucion.algoritmos;
 
+import distribucion.modelo.TipoUbicacion;
 import distribucion.modelo.Ubicacion;
 import distribucion.rutas.ResultadoRuta;
 
@@ -9,58 +10,107 @@ import java.util.List;
 
 public class RecorridoMultiplesEntregas {
 
-    private FloydWarshall floyd;
+    private final FloydWarshall floyd;
     private List<Ubicacion> mejorOrden;
     private long menorTiempo;
+    private boolean existeRecorrido;
 
     public RecorridoMultiplesEntregas(FloydWarshall floyd) {
+
+        if (floyd == null) {
+            throw new IllegalArgumentException(
+                    "falta el calculo de rutas"
+            );
+        }
+
         this.floyd = floyd;
+        this.mejorOrden = new ArrayList<>();
+        this.menorTiempo = Long.MAX_VALUE;
+        this.existeRecorrido = false;
     }
 
     public void calcular(Ubicacion deposito, List<Ubicacion> centros) {
 
+        mejorOrden = new ArrayList<>();
+        menorTiempo = Long.MAX_VALUE;
+        existeRecorrido = false;
+
         if (deposito == null || centros == null) {
-            throw new IllegalArgumentException("faltan datos del recorrido");
+            throw new IllegalArgumentException(
+                    "faltan datos del recorrido"
+            );
+        }
+
+        if (deposito.getTipo() != TipoUbicacion.DEPOSITO) {
+            throw new IllegalArgumentException(
+                    "la ubicacion inicial debe ser un deposito"
+            );
         }
 
         if (centros.isEmpty() || centros.size() > 8) {
-            throw new IllegalArgumentException("debe haber entre 1 y 8 centros");
+            throw new IllegalArgumentException(
+                    "debe haber entre 1 y 8 centros"
+            );
         }
 
-        // verificar que no haya centros repetidos
+        // validar los centros seleccionados
         for (int i = 0; i < centros.size(); i++) {
+
             Ubicacion actual = centros.get(i);
 
-            if (actual == null || actual.getId() == deposito.getId()) {
-                throw new IllegalArgumentException("centro no valido");
+            if (actual == null ||
+                    actual.getTipo() != TipoUbicacion.CENTRO_COMUNITARIO) {
+
+                throw new IllegalArgumentException(
+                        "centro no valido"
+                );
+            }
+
+            if (actual.getId() == deposito.getId()) {
+                throw new IllegalArgumentException(
+                        "el deposito no puede ser una entrega"
+                );
             }
 
             for (int j = i + 1; j < centros.size(); j++) {
-                if (centros.get(j) != null &&
-                        actual.getId() == centros.get(j).getId()) {
-                    throw new IllegalArgumentException("hay centros repetidos");
+
+                Ubicacion otro = centros.get(j);
+
+                if (otro != null &&
+                        actual.getId() == otro.getId()) {
+
+                    throw new IllegalArgumentException(
+                            "hay centros repetidos"
+                    );
                 }
             }
         }
 
-        mejorOrden = new ArrayList<>();
-        menorTiempo = Long.MAX_VALUE;
-
         boolean[] visitados = new boolean[centros.size()];
         List<Ubicacion> ordenActual = new ArrayList<>();
 
-        // buscar el mejor orden de visita
-        backtracking(deposito, deposito, centros,
-                visitados, ordenActual, 0);
+        // buscar el orden con menor tiempo total
+        backtracking(
+                deposito,
+                deposito,
+                centros,
+                visitados,
+                ordenActual,
+                0
+        );
 
-        if (menorTiempo == Long.MAX_VALUE) {
-            System.out.println("no existe un recorrido completo disponible");
+        if (!existeRecorrido) {
+            System.out.println(
+                    "no existe un recorrido completo disponible"
+            );
             return;
         }
 
-        System.out.println("\n=== RECORRIDO CON MULTIPLES ENTREGAS ===");
-        System.out.println("orden de entregas:");
+        System.out.println(
+                "\n=== RECORRIDO CON MULTIPLES ENTREGAS ==="
+        );
 
+        System.out.println("orden de entregas:");
         System.out.print(deposito.getNombre());
 
         for (Ubicacion centro : mejorOrden) {
@@ -68,12 +118,14 @@ public class RecorridoMultiplesEntregas {
         }
 
         System.out.println(" -> " + deposito.getNombre());
-        System.out.println("tiempo total: " + menorTiempo + " minutos");
+
+        System.out.println(
+                "tiempo total: " + menorTiempo + " minutos"
+        );
 
         mostrarRecorridoCompleto(deposito);
     }
 
-    // probar las distintas combinaciones
     private void backtracking(
             Ubicacion deposito,
             Ubicacion actual,
@@ -82,22 +134,25 @@ public class RecorridoMultiplesEntregas {
             List<Ubicacion> ordenActual,
             long tiempoActual) {
 
-        // todos los centros fueron visitados
+        // comprobar el regreso al deposito
         if (ordenActual.size() == centros.size()) {
 
             ResultadoRuta regreso = floyd.consultar(
-                    actual.getId(), deposito.getId()
+                    actual.getId(),
+                    deposito.getId()
             );
 
             if (!regreso.isExisteRuta()) {
                 return;
             }
 
-            long tiempoTotal = tiempoActual + regreso.getTiempoTotal();
+            long tiempoTotal =
+                    tiempoActual + regreso.getTiempoTotal();
 
             if (tiempoTotal < menorTiempo) {
                 menorTiempo = tiempoTotal;
                 mejorOrden = new ArrayList<>(ordenActual);
+                existeRecorrido = true;
             }
 
             return;
@@ -112,16 +167,18 @@ public class RecorridoMultiplesEntregas {
             Ubicacion siguiente = centros.get(i);
 
             ResultadoRuta ruta = floyd.consultar(
-                    actual.getId(), siguiente.getId()
+                    actual.getId(),
+                    siguiente.getId()
             );
 
             if (!ruta.isExisteRuta()) {
                 continue;
             }
 
-            long nuevoTiempo = tiempoActual + ruta.getTiempoTotal();
+            long nuevoTiempo =
+                    tiempoActual + ruta.getTiempoTotal();
 
-            // descartar recorridos que ya son mas largos
+            // descartar recorridos que no mejoran el resultado
             if (nuevoTiempo >= menorTiempo) {
                 continue;
             }
@@ -129,19 +186,25 @@ public class RecorridoMultiplesEntregas {
             visitados[i] = true;
             ordenActual.add(siguiente);
 
-            backtracking(deposito, siguiente, centros,
-                    visitados, ordenActual, nuevoTiempo);
+            backtracking(
+                    deposito,
+                    siguiente,
+                    centros,
+                    visitados,
+                    ordenActual,
+                    nuevoTiempo
+            );
 
-            // volver para probar otro camino
+            // retroceder y probar otro orden
             ordenActual.remove(ordenActual.size() - 1);
             visitados[i] = false;
         }
     }
 
-    // mostrar las ubicaciones atravesadas
     private void mostrarRecorridoCompleto(Ubicacion deposito) {
 
         List<Ubicacion> paradas = new ArrayList<>();
+
         paradas.add(deposito);
         paradas.addAll(mejorOrden);
         paradas.add(deposito);
@@ -159,7 +222,6 @@ public class RecorridoMultiplesEntregas {
 
             for (int j = 0; j < ubicaciones.size(); j++) {
 
-                // no repetir el inicio de cada tramo
                 if (i > 0 && j == 0) {
                     continue;
                 }
@@ -171,7 +233,10 @@ public class RecorridoMultiplesEntregas {
         System.out.println("\nrecorrido completo:");
 
         for (int i = 0; i < recorrido.size(); i++) {
-            System.out.print(recorrido.get(i).getNombre());
+
+            System.out.print(
+                    recorrido.get(i).getNombre()
+            );
 
             if (i < recorrido.size() - 1) {
                 System.out.print(" -> ");
@@ -179,5 +244,17 @@ public class RecorridoMultiplesEntregas {
         }
 
         System.out.println();
+    }
+
+    public boolean isExisteRecorrido() {
+        return existeRecorrido;
+    }
+
+    public long getMenorTiempo() {
+        return menorTiempo;
+    }
+
+    public List<Ubicacion> getMejorOrden() {
+        return new ArrayList<>(mejorOrden);
     }
 }

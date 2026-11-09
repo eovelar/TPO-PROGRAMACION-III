@@ -29,14 +29,13 @@ import java.util.Set;
 
 public class Main {
 
-    // iniciar el sistema
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
         GestorPedidos gestor = new GestorPedidos();
         RedVial red;
 
-        // cargar los datos desde los txt
+        // cargar la red desde los archivos
         try {
             red = LectorDatos.cargarRed(
                     "datos/ubicaciones.txt",
@@ -98,7 +97,7 @@ public class Main {
         scanner.close();
     }
 
-    // gestionar los pedidos
+    // gestionar pedidos
     private static void menuPedidos(
             Scanner scanner,
             GestorPedidos gestor,
@@ -217,7 +216,6 @@ public class Main {
         Dijkstra dijkstra = new Dijkstra(red);
         FloydWarshall floyd = new FloydWarshall(red);
 
-        // preparar las rutas entre todas las ubicaciones
         floyd.calcular();
 
         int opcion;
@@ -242,7 +240,6 @@ public class Main {
                     break;
 
                 case 2: {
-                    // buscar la ruta mas rapida con dijkstra
                     red.mostrarRed();
 
                     int origenId = leerEntero(scanner, "id de origen: ");
@@ -264,7 +261,6 @@ public class Main {
                 }
 
                 case 3: {
-                    // consultar las rutas calculadas con floyd
                     red.mostrarRed();
 
                     int origenId = leerEntero(scanner, "id de origen: ");
@@ -285,17 +281,14 @@ public class Main {
                 }
 
                 case 4:
-                    // planificar varias entregas con backtracking
                     calcularMultiplesEntregas(scanner, red, floyd);
                     break;
 
                 case 5:
-                    // buscar caminos respetando restricciones
                     buscarRutasAlternativas(scanner, red);
                     break;
 
                 case 6: {
-                    // deshabilitar una conexion
                     int desde = leerEntero(
                             scanner, "id de origen de la conexion: "
                     );
@@ -314,7 +307,6 @@ public class Main {
                 }
 
                 case 7: {
-                    // habilitar una conexion
                     int desde = leerEntero(
                             scanner, "id de origen de la conexion: "
                     );
@@ -351,60 +343,165 @@ public class Main {
 
         System.out.println("\n=== RECORRIDO CON MULTIPLES ENTREGAS ===");
 
-        red.mostrarRed();
+        List<Ubicacion> depositos = new ArrayList<>();
+        List<Ubicacion> disponibles = new ArrayList<>();
 
-        int idDeposito = leerEntero(
-                scanner, "id del deposito de salida: "
-        );
+        // separar depositos y centros comunitarios
+        for (Ubicacion ubicacion : red.getUbicaciones()) {
 
-        Ubicacion deposito = red.buscarUbicacionPorId(idDeposito);
+            if (ubicacion.getTipo() == TipoUbicacion.DEPOSITO) {
+                depositos.add(ubicacion);
+            }
 
-        if (deposito == null ||
-                deposito.getTipo() != TipoUbicacion.DEPOSITO) {
+            if (ubicacion.getTipo() == TipoUbicacion.CENTRO_COMUNITARIO) {
+                disponibles.add(ubicacion);
+            }
+        }
 
-            System.out.println("debe seleccionar un deposito valido");
+        if (depositos.isEmpty()) {
+            System.out.println("no hay depositos disponibles");
             return;
         }
 
-        int cantidad = leerEntero(
-                scanner, "cantidad de centros a visitar (1 a 8): "
+        if (disponibles.isEmpty()) {
+            System.out.println("no hay centros comunitarios disponibles");
+            return;
+        }
+
+        System.out.println("\ndepositos disponibles:");
+
+        for (Ubicacion deposito : depositos) {
+            System.out.println(
+                    deposito.getId() + " - " + deposito.getNombre()
+            );
+        }
+
+        System.out.println("\n0 - Cancelar");
+
+        Ubicacion deposito;
+
+        while (true) {
+
+            int idDeposito = leerEntero(
+                    scanner, "id del deposito de salida: "
+            );
+
+            if (idDeposito == 0) {
+                System.out.println("operacion cancelada");
+                return;
+            }
+
+            deposito = red.buscarUbicacionPorId(idDeposito);
+
+            if (deposito != null &&
+                    deposito.getTipo() == TipoUbicacion.DEPOSITO) {
+                break;
+            }
+
+            System.out.println(
+                    "deposito no valido. seleccione uno de la lista o 0 para cancelar"
+            );
+        }
+
+        System.out.println("\ncentros comunitarios disponibles:");
+
+        for (Ubicacion centro : disponibles) {
+            System.out.println(
+                    centro.getId() + " - " + centro.getNombre()
+            );
+        }
+
+        int maximo = Math.min(8, disponibles.size());
+
+        System.out.println(
+                "\npuede seleccionar entre 1 y " + maximo + " centros"
         );
 
-        if (cantidad < 1 || cantidad > 8) {
-            System.out.println("debe seleccionar entre 1 y 8 centros");
-            return;
+        System.out.println("0 - Cancelar");
+
+        int cantidad;
+
+        while (true) {
+
+            cantidad = leerEntero(
+                    scanner, "cantidad de centros a visitar: "
+            );
+
+            if (cantidad == 0) {
+                System.out.println("operacion cancelada");
+                return;
+            }
+
+            if (cantidad >= 1 && cantidad <= maximo) {
+                break;
+            }
+
+            System.out.println(
+                    "cantidad no valida. debe ingresar entre 1 y "
+                            + maximo + ", o 0 para cancelar"
+            );
         }
 
         List<Ubicacion> centros = new ArrayList<>();
         Set<Integer> seleccionados = new HashSet<>();
 
-        // seleccionar los centros de entrega
-        for (int i = 0; i < cantidad; i++) {
+        // seleccionar centros sin repetirlos
+        while (centros.size() < cantidad) {
+
+            System.out.println(
+                    "\ncentro " + (centros.size() + 1)
+                            + " de " + cantidad
+            );
+
+            int restantes = 0;
+
+            for (Ubicacion centro : disponibles) {
+
+                if (!seleccionados.contains(centro.getId())) {
+                    System.out.println(
+                            centro.getId() + " - " + centro.getNombre()
+                    );
+                    restantes++;
+                }
+            }
+
+            if (restantes == 0) {
+                System.out.println("no quedan centros para seleccionar");
+                return;
+            }
+
+            System.out.println("0 - Cancelar");
 
             int idCentro = leerEntero(
-                    scanner, "id del centro " + (i + 1) + ": "
+                    scanner, "id del centro: "
             );
+
+            if (idCentro == 0) {
+                System.out.println("operacion cancelada");
+                return;
+            }
 
             Ubicacion centro = red.buscarUbicacionPorId(idCentro);
 
             if (centro == null ||
                     centro.getTipo() != TipoUbicacion.CENTRO_COMUNITARIO) {
 
-                System.out.println("debe seleccionar un centro comunitario");
-                i--;
+                System.out.println(
+                        "centro no valido. seleccione uno de la lista"
+                );
                 continue;
             }
 
-            if (!seleccionados.add(idCentro)) {
+            if (seleccionados.contains(idCentro)) {
                 System.out.println("ese centro ya fue seleccionado");
-                i--;
                 continue;
             }
 
+            seleccionados.add(idCentro);
             centros.add(centro);
         }
 
-        // encontrar el orden con menor tiempo
+        // buscar el mejor recorrido
         RecorridoMultiplesEntregas recorrido =
                 new RecorridoMultiplesEntregas(floyd);
 
@@ -416,7 +513,7 @@ public class Main {
         }
     }
 
-    // buscar caminos con tiempo maximo y lugares prohibidos
+    // buscar rutas con restricciones
     private static void buscarRutasAlternativas(
             Scanner scanner,
             RedVial red) {
@@ -427,6 +524,7 @@ public class Main {
 
         int idOrigen = leerEntero(scanner, "id de origen: ");
         int idDestino = leerEntero(scanner, "id de destino: ");
+
         int tiempoMaximo = leerEntero(
                 scanner, "tiempo maximo permitido (minutos): "
         );
@@ -449,7 +547,7 @@ public class Main {
 
         Set<Integer> prohibidas = new HashSet<>();
 
-        // cargar las ubicaciones que no se pueden atravesar
+        // cargar ubicaciones prohibidas
         for (int i = 0; i < cantidadProhibidas; i++) {
 
             int id = leerEntero(
@@ -468,7 +566,6 @@ public class Main {
             }
         }
 
-        // buscar todos los caminos validos
         RutasAlternativas rutas = new RutasAlternativas(red);
 
         try {
@@ -484,7 +581,7 @@ public class Main {
         }
     }
 
-    // seleccionar los lotes segun la capacidad
+    // seleccionar cargas
     private static void menuCargas(Scanner scanner) {
 
         int capacidad = leerEntero(
@@ -524,7 +621,7 @@ public class Main {
         }
     }
 
-    // validar numeros enteros
+    // validar enteros
     private static int leerEntero(
             Scanner scanner,
             String mensaje) {
@@ -546,7 +643,7 @@ public class Main {
         }
     }
 
-    // validar numeros decimales
+    // validar decimales
     private static double leerDouble(
             Scanner scanner,
             String mensaje) {
