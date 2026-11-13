@@ -73,7 +73,7 @@ public class VentanaPrincipal extends JFrame {
         }
     }
 
-    // ================= menu lateral =================
+    // menu lateral
 
     private JComponent crearMenu() {
         JPanel lateral = new JPanel(new BorderLayout()) {
@@ -321,7 +321,6 @@ public class VentanaPrincipal extends JFrame {
         tarjetas.show(panelCentral, seccion);
     }
 
-    // ================= item del menu =================
 
     private static class ItemMenu extends JComponent {
 
@@ -391,7 +390,6 @@ public class VentanaPrincipal extends JFrame {
     }
 
     public static void main(String[] args) {
-        // suavizado de texto en todos los componentes (tiene que ir antes de crear la ventana)
         System.setProperty("awt.useSystemAAFontSettings", "lcd");
         System.setProperty("swing.aatext", "true");
 
@@ -399,7 +397,6 @@ public class VentanaPrincipal extends JFrame {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
-                // usar el estilo disponible
             }
 
             Tema.aplicarDefaults();
