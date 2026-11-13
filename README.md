@@ -1,4 +1,3 @@
-
 # TPO Programación III — Planificación de rutas y distribución de ayuda
 
 **Integrantes:** Evangelina Ovelar y Luka Peralta  
@@ -32,9 +31,7 @@ Permite encontrar el recorrido de menor tiempo entre dos ubicaciones de la red v
 
 Utilizamos **Dijkstra (Greedy)**.
 
-El sistema muestra las ubicaciones recorridas, el tiempo total y las principales decisiones del cálculo.
-
-También permite habilitar y deshabilitar conexiones para volver a calcular las rutas.
+El sistema muestra las ubicaciones recorridas, el tiempo total y las principales decisiones del cálculo. También permite habilitar y deshabilitar conexiones para volver a calcular las rutas.
 
 ### 3. Selección de cargas prioritarias
 
@@ -56,9 +53,7 @@ Después del cálculo inicial se pueden realizar distintas consultas sin volver 
 
 Utilizamos **Backtracking** junto con las distancias calculadas por Floyd–Warshall.
 
-El vehículo sale de un depósito, visita los centros seleccionados y regresa al punto de partida.
-
-El algoritmo prueba diferentes órdenes de entrega y conserva el recorrido de menor tiempo.
+El vehículo sale de un depósito, visita los centros seleccionados y regresa al punto de partida. El algoritmo prueba diferentes órdenes de entrega y conserva el recorrido de menor tiempo.
 
 Se pueden seleccionar hasta ocho centros, siempre que estén disponibles en la red.
 
@@ -66,11 +61,11 @@ Se pueden seleccionar hasta ocho centros, siempre que estén disponibles en la r
 
 Utilizamos **Backtracking** para encontrar todos los caminos válidos entre dos ubicaciones.
 
-El usuario puede establecer un tiempo máximo y seleccionar ubicaciones prohibidas.
-
-Los recorridos no pueden repetir ubicaciones ni utilizar conexiones deshabilitadas.
+El usuario puede establecer un tiempo máximo y seleccionar ubicaciones prohibidas. Los recorridos no pueden repetir ubicaciones ni utilizar conexiones deshabilitadas.
 
 ## Organización del proyecto
+
+El código está organizado en paquetes según la responsabilidad de cada clase, separando los algoritmos, los datos y las interfaces.
 
 ```text
 TPO-PROGRAMACION-III/
@@ -81,7 +76,6 @@ TPO-PROGRAMACION-III/
 │
 ├── src/
 │   └── distribucion/
-│       │
 │       ├── modelo/
 │       │   ├── Ubicacion.java
 │       │   ├── TipoUbicacion.java
@@ -89,7 +83,6 @@ TPO-PROGRAMACION-III/
 │       │   ├── Pedido.java
 │       │   ├── Vehiculo.java
 │       │   └── LoteMercaderia.java
-│       │
 │       ├── algoritmos/
 │       │   ├── MergeSortPedidos.java
 │       │   ├── BusquedaBinariaPedidos.java
@@ -98,17 +91,13 @@ TPO-PROGRAMACION-III/
 │       │   ├── SeleccionCargas.java
 │       │   ├── RecorridoMultiplesEntregas.java
 │       │   └── RutasAlternativas.java
-│       │
 │       ├── servicios/
 │       │   └── GestorPedidos.java
-│       │
 │       ├── rutas/
 │       │   ├── RedVial.java
 │       │   └── ResultadoRuta.java
-│       │
 │       ├── persistencia/
 │       │   └── LectorDatos.java
-│       │
 │       ├── pruebas/
 │       │   ├── PruebaPedidos.java
 │       │   ├── PruebaCargas.java
@@ -117,13 +106,16 @@ TPO-PROGRAMACION-III/
 │       │   ├── PruebaRecorridoMultiples.java
 │       │   ├── PruebaRutasAlternativas.java
 │       │   └── TestAlgoritmos.java
-│       │
 │       └── vista/
 │           ├── Main.java
 │           ├── VentanaPrincipal.java
+│           ├── PanelPedidos.java
 │           ├── PanelRutas.java
-│           └── PanelGrafo.java
+│           ├── PanelGrafo.java
+│           ├── PanelCargas.java
+│           └── Tema.java
 │
+├── TPO Programación III - INFORME FINAL.pdf
 └── README.md
 ```
 
@@ -179,27 +171,27 @@ Los archivos se pueden modificar para probar otras redes sin recompilar el progr
 
 1. Clonar el repositorio:
 
-```bash
-git clone https://github.com/eovelar/TPO-PROGRAMACION-III.git
-```
+   ```bash
+   git clone https://github.com/eovelar/TPO-PROGRAMACION-III.git
+   ```
 
 2. Abrir la carpeta del proyecto en IntelliJ IDEA.
-
 3. Configurar un JDK compatible con el proyecto. Se utilizó OpenJDK 27 durante las últimas pruebas.
-
 4. Verificar que la carpeta `datos` esté en la raíz del proyecto y que el directorio de trabajo de la configuración de ejecución sea esa raíz.
 
-5. Ejecutar la clase:
+### Ejecución desde consola
+
+Ejecutar la clase:
 
 ```text
 distribucion.vista.Main
 ```
 
-Desde el menú de consola se pueden utilizar las seis funcionalidades.
+Desde el menú de consola se pueden utilizar las seis funcionalidades del sistema.
 
-### Interfaz gráfica
+### Interfaz gráfica — NEXO
 
-También se desarrolló una interfaz con Java Swing.
+También desarrollamos una interfaz gráfica con Java Swing.
 
 Para abrirla, ejecutar:
 
@@ -207,17 +199,20 @@ Para abrirla, ejecutar:
 distribucion.vista.VentanaPrincipal
 ```
 
-Esta interfaz permite consultar rutas mediante Dijkstra y Floyd–Warshall y visualizar la red vial mediante un grafo.
+La interfaz cuenta con un menú lateral y cuatro secciones principales:
 
-Las demás funcionalidades se encuentran disponibles desde el menú de consola.
+- **Panel general:** presentación del sistema y sus funcionalidades.
+- **Gestión de pedidos:** registro, ordenamiento por fecha o prioridad y búsqueda por ID.
+- **Planificación de rutas:** consultas mediante Dijkstra y Floyd–Warshall, con visualización de la red vial.
+- **Selección de cargas:** ingreso de lotes y cálculo de la mejor combinación mediante Mochila 0/1.
+
+La interfaz utiliza las clases y algoritmos del proyecto, manteniendo separada la lógica de la presentación. Las funcionalidades adicionales B1 y B3 se ejecutan desde el menú de consola.
 
 No se requieren frameworks ni dependencias externas.
 
 ## Pruebas
 
-El proyecto incluye clases de prueba para cada funcionalidad.
-
-Para ejecutarlas, abrir IntelliJ y ejecutar el método `main()` de cada una:
+El proyecto incluye clases de prueba para cada funcionalidad. Para ejecutarlas, abrir IntelliJ IDEA y ejecutar el método `main()` de cada una.
 
 | Clase | Pruebas correctas |
 |---|---:|
@@ -243,11 +238,15 @@ Se probaron casos habituales, entradas inválidas, empates, restricciones, ausen
 | Programación Dinámica | Mochila 0/1 y Floyd–Warshall |
 | Backtracking | Recorrido con múltiples entregas y rutas alternativas |
 
+La búsqueda binaria se utiliza para consultar pedidos previamente ordenados por ID.
+
 ## Documentación
 
-El informe final desarrolla las seis funcionalidades, las estrategias utilizadas, sus complejidades, las alternativas consideradas y los resultados de las pruebas.
+El informe final incluye la explicación de las seis funcionalidades, la justificación de los algoritmos, sus complejidades, las alternativas consideradas y los resultados de las pruebas.
 
-También incluye las correcciones realizadas a partir de la devolución de la primera entrega.
+También documenta la estructura del proyecto y las correcciones realizadas a partir de la devolución de la primera entrega.
+
+**Informe final:** [TPO Programación III - INFORME FINAL.pdf](TPO%20Programaci%C3%B3n%20III%20-%20INFORME%20FINAL.pdf)
 
 ## Repositorio
 
