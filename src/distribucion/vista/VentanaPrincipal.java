@@ -1,519 +1,409 @@
-
 package distribucion.vista;
+
+import distribucion.modelo.ConexionVial;
+import distribucion.persistencia.LectorDatos;
+import distribucion.rutas.RedVial;
+import distribucion.vista.Tema.Insignia;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class VentanaPrincipal extends JFrame {
 
-    // colores del sistema
-    private static final Color AZUL = new Color(27, 43, 58);
-    private static final Color AZUL_CLARO = new Color(42, 63, 80);
-    private static final Color TURQUESA = new Color(19, 157, 151);
-    private static final Color FONDO = new Color(245, 248, 250);
-    private static final Color TEXTO = new Color(35, 49, 61);
-    private static final Color GRIS = new Color(112, 125, 137);
-    private static final Color BLANCO = Color.WHITE;
+    private static final String[][] SECCIONES = {
+            {"inicio", "Panel general", "Resumen de la red y accesos rapidos"},
+            {"pedidos", "Gestion de pedidos", "Registro, ordenamiento y busqueda de pedidos"},
+            {"rutas", "Planificacion de rutas", "Recorridos sobre la red vial entre depositos y centros"},
+            {"cargas", "Seleccion de cargas", "Lotes que conviene llevar segun la capacidad del vehiculo"}
+    };
 
-    private JPanel panelCentral;
-    private CardLayout tarjetas;
+    private static final Icono.Tipo[] ICONOS = {
+            Icono.Tipo.INICIO, Icono.Tipo.PEDIDOS, Icono.Tipo.RUTAS, Icono.Tipo.CARGAS
+    };
+
+    private final CardLayout tarjetas = new CardLayout();
+    private final JPanel panelCentral = new JPanel(tarjetas);
+    private final Map<String, ItemMenu> items = new LinkedHashMap<>();
+
     private JLabel tituloSeccion;
+    private JLabel subtituloSeccion;
+    private JLabel resumenRed;
+    private JLabel estadoRed;
+
+    // la red se carga una sola vez y la comparten todos los paneles
+    private RedVial red;
+    private PanelInicio panelInicio;
 
     public VentanaPrincipal() {
-
         setTitle("NEXO | Sistema de Distribucion de Ayuda");
-        setSize(1100, 700);
-        setMinimumSize(new Dimension(900, 580));
+        setSize(1280, 800);
+        setMinimumSize(new Dimension(1180, 720));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        setLayout(new BorderLayout());
+        cargarRed();
 
-        crearMenuLateral();
-        crearContenido();
+        JPanel raiz = new JPanel(new BorderLayout());
+        raiz.setBackground(Tema.FONDO);
+        raiz.add(crearMenu(), BorderLayout.WEST);
+        raiz.add(crearContenido(), BorderLayout.CENTER);
+        setContentPane(raiz);
 
-        mostrarSeccion("inicio", "Panel general");
+        mostrarSeccion("inicio");
     }
 
-    // crear el menu lateral
-    private void crearMenuLateral() {
+    private void cargarRed() {
+        try {
+            red = LectorDatos.cargarRed("datos/ubicaciones.txt", "datos/conexiones.txt");
+        } catch (IOException | IllegalArgumentException e) {
+            red = null;
+            JOptionPane.showMessageDialog(null,
+                    "No se pudo cargar la red vial:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
-        JPanel lateral = new JPanel(new BorderLayout());
-        lateral.setBackground(AZUL);
-        lateral.setPreferredSize(new Dimension(235, 0));
-        lateral.setBorder(new EmptyBorder(28, 18, 22, 18));
+    // ================= menu lateral =================
+
+    private JComponent crearMenu() {
+        JPanel lateral = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setPaint(new GradientPaint(0, 0, Tema.NAVY_2, 0, getHeight(), Tema.NAVY));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.dispose();
+            }
+        };
+        lateral.setPreferredSize(new Dimension(240, 0));
+        lateral.setBorder(new EmptyBorder(26, 16, 20, 16));
 
         JPanel superior = new JPanel();
         superior.setOpaque(false);
-        superior.setLayout(
-                new BoxLayout(superior, BoxLayout.Y_AXIS)
-        );
+        superior.setLayout(new BoxLayout(superior, BoxLayout.Y_AXIS));
 
-        JLabel marca = new JLabel("NEXO");
-        marca.setFont(new Font("SansSerif", Font.BOLD, 28));
-        marca.setForeground(BLANCO);
+        JComponent marca = crearMarca();
         marca.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel subtitulo = new JLabel("GESTION LOGISTICA");
-        subtitulo.setFont(new Font("SansSerif", Font.PLAIN, 10));
-        subtitulo.setForeground(new Color(164, 183, 195));
-        subtitulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
         superior.add(marca);
-        superior.add(Box.createVerticalStrut(5));
-        superior.add(subtitulo);
-        superior.add(Box.createVerticalStrut(45));
+        superior.add(Box.createVerticalStrut(36));
 
-        superior.add(crearBotonMenu(
-                "Panel general", "inicio", "Panel general"
-        ));
+        JLabel modulos = new JLabel("MODULOS");
+        modulos.setFont(Tema.fuente(Font.BOLD, 10.5f));
+        modulos.setForeground(new Color(110, 132, 150));
+        modulos.setBorder(new EmptyBorder(0, 14, 10, 0));
+        modulos.setAlignmentX(Component.LEFT_ALIGNMENT);
+        superior.add(modulos);
 
-        superior.add(Box.createVerticalStrut(12));
-
-        superior.add(crearBotonMenu(
-                "Gestion de pedidos",
-                "pedidos",
-                "Gestion de pedidos"
-        ));
-
-        superior.add(Box.createVerticalStrut(12));
-
-        superior.add(crearBotonMenu(
-                "Planificacion de rutas",
-                "rutas",
-                "Planificacion de rutas"
-        ));
-
-        superior.add(Box.createVerticalStrut(12));
-
-        superior.add(crearBotonMenu(
-                "Seleccion de cargas",
-                "cargas",
-                "Seleccion de cargas"
-        ));
+        for (int i = 0; i < SECCIONES.length; i++) {
+            String id = SECCIONES[i][0];
+            ItemMenu item = new ItemMenu(SECCIONES[i][1], ICONOS[i], () -> mostrarSeccion(id));
+            item.setAlignmentX(Component.LEFT_ALIGNMENT);
+            items.put(id, item);
+            superior.add(item);
+            superior.add(Box.createVerticalStrut(4));
+        }
 
         JPanel inferior = new JPanel();
         inferior.setOpaque(false);
-        inferior.setLayout(
-                new BoxLayout(inferior, BoxLayout.Y_AXIS)
-        );
+        inferior.setLayout(new BoxLayout(inferior, BoxLayout.Y_AXIS));
 
-        JLabel version = new JLabel("PROGRAMACION III");
-        version.setForeground(new Color(164, 183, 195));
-        version.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        version.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JComponent tarjetaRed = crearEstadoRed();
+        tarjetaRed.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton salir = crearBotonMenu(
-                "Salir", null, null
-        );
+        ItemMenu salir = new ItemMenu("Salir", Icono.Tipo.SALIR, this::dispose);
+        salir.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        salir.addActionListener(e -> dispose());
-
-        inferior.add(version);
+        inferior.add(tarjetaRed);
         inferior.add(Box.createVerticalStrut(12));
         inferior.add(salir);
 
         lateral.add(superior, BorderLayout.NORTH);
         lateral.add(inferior, BorderLayout.SOUTH);
-
-        add(lateral, BorderLayout.WEST);
+        return lateral;
     }
 
-    // botones de navegacion
-    private JButton crearBotonMenu(
-            String texto,
-            String seccion,
-            String titulo) {
+    private JComponent crearMarca() {
+        JComponent logo = new JComponent() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = Tema.suavizado(g);
+                g2.setPaint(new GradientPaint(0, 0, new Color(38, 190, 182), 38, 38, Tema.TURQUESA_OSCURO));
+                g2.fill(new RoundRectangle2D.Double(0, 0, 38, 38, 12, 12));
 
-        JButton boton = new JButton(texto);
+                // tres nodos conectados como isotipo
+                g2.setColor(Color.WHITE);
+                g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.drawLine(11, 26, 19, 12);
+                g2.drawLine(19, 12, 27, 26);
+                g2.fillOval(7, 22, 8, 8);
+                g2.fillOval(15, 8, 8, 8);
+                g2.fillOval(23, 22, 8, 8);
+                g2.dispose();
+            }
+        };
+        logo.setPreferredSize(new Dimension(38, 38));
 
-        boton.setFont(
-                new Font("SansSerif", Font.BOLD, 13)
-        );
-        boton.setForeground(BLANCO);
-        boton.setBackground(AZUL_CLARO);
-        boton.setFocusPainted(false);
-        boton.setBorderPainted(false);
-        boton.setHorizontalAlignment(SwingConstants.LEFT);
-        boton.setBorder(new EmptyBorder(14, 15, 14, 10));
-        boton.setMaximumSize(new Dimension(200, 47));
-        boton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        JLabel nombre = new JLabel("NEXO");
+        nombre.setFont(Tema.fuente(Font.BOLD, 21));
+        nombre.setForeground(Color.WHITE);
 
-        if (seccion != null) {
-            boton.addActionListener(
-                    e -> mostrarSeccion(seccion, titulo)
-            );
+        JLabel bajada = new JLabel("Gestion logistica");
+        bajada.setFont(Tema.fuente(Font.PLAIN, 11.5f));
+        bajada.setForeground(Tema.MENU_TEXTO);
+
+        JPanel textos = new JPanel(new GridLayout(2, 1, 0, 0));
+        textos.setOpaque(false);
+        textos.add(nombre);
+        textos.add(bajada);
+
+        JPanel contenedorLogo = new JPanel(new GridBagLayout());
+        contenedorLogo.setOpaque(false);
+        contenedorLogo.add(logo);
+
+        JPanel marca = new JPanel(new BorderLayout(12, 0));
+        marca.setOpaque(false);
+        marca.setBorder(new EmptyBorder(0, 8, 0, 0));
+        marca.add(contenedorLogo, BorderLayout.WEST);
+        marca.add(textos, BorderLayout.CENTER);
+        marca.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+        return marca;
+    }
+
+    private JComponent crearEstadoRed() {
+        JPanel tarjeta = new JPanel(new BorderLayout(0, 4)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = Tema.suavizado(g);
+                g2.setColor(new Color(255, 255, 255, 14));
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 12, 12));
+                g2.dispose();
+            }
+        };
+        tarjeta.setOpaque(false);
+        tarjeta.setBorder(new EmptyBorder(12, 14, 12, 14));
+        tarjeta.setMaximumSize(new Dimension(Integer.MAX_VALUE, 64));
+
+        estadoRed = new JLabel();
+        estadoRed.setFont(Tema.fuente(Font.BOLD, 12));
+        estadoRed.setForeground(Color.WHITE);
+        estadoRed.setIconTextGap(8);
+
+        resumenRed = new JLabel();
+        resumenRed.setFont(Tema.fuente(Font.PLAIN, 11.5f));
+        resumenRed.setForeground(Tema.MENU_TEXTO);
+
+        tarjeta.add(estadoRed, BorderLayout.NORTH);
+        tarjeta.add(resumenRed, BorderLayout.CENTER);
+        return tarjeta;
+    }
+
+    private void actualizarEstadoRed() {
+        if (red == null) {
+            estadoRed.setIcon(punto(Tema.ROJO));
+            estadoRed.setText("Red no disponible");
+            resumenRed.setText("Revise los archivos de datos");
+            return;
         }
 
-        return boton;
+        int habilitadas = 0;
+        for (ConexionVial c : red.getConexiones()) {
+            if (c.isHabilitada()) {
+                habilitadas++;
+            }
+        }
+        boolean completa = habilitadas == red.getConexiones().size();
+
+        estadoRed.setIcon(punto(completa ? new Color(52, 196, 188) : new Color(232, 168, 56)));
+        estadoRed.setText(completa ? "Red vial cargada" : "Red con cortes");
+        resumenRed.setText(red.getUbicaciones().size() + " ubicaciones · "
+                + habilitadas + "/" + red.getConexiones().size() + " conexiones");
     }
 
-    // crear el contenido principal
-    private void crearContenido() {
+    private static Icon punto(Color color) {
+        return new Icon() {
+            @Override
+            public void paintIcon(Component c, Graphics g, int x, int y) {
+                Graphics2D g2 = Tema.suavizado(g);
+                g2.setColor(Tema.conAlfa(color, 60));
+                g2.fillOval(x, y, 10, 10);
+                g2.setColor(color);
+                g2.fillOval(x + 2, y + 2, 6, 6);
+                g2.dispose();
+            }
 
-        JPanel contenido = new JPanel(new BorderLayout());
-        contenido.setBackground(FONDO);
-        contenido.setBorder(
-                new EmptyBorder(30, 36, 30, 36)
-        );
+            @Override
+            public int getIconWidth() {
+                return 10;
+            }
+
+            @Override
+            public int getIconHeight() {
+                return 10;
+            }
+        };
+    }
+
+    // ================= contenido =================
+
+    private JComponent crearContenido() {
+        JPanel contenido = new JPanel(new BorderLayout(0, 22));
+        contenido.setOpaque(false);
+        contenido.setBorder(new EmptyBorder(26, 32, 26, 32));
+
+        tituloSeccion = Tema.titulo("", 25);
+        subtituloSeccion = Tema.texto("");
+
+        JPanel textos = new JPanel(new BorderLayout(0, 4));
+        textos.setOpaque(false);
+        textos.add(tituloSeccion, BorderLayout.NORTH);
+        textos.add(subtituloSeccion, BorderLayout.CENTER);
+
+        String hoy = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", new Locale("es", "AR")));
+        hoy = Character.toUpperCase(hoy.charAt(0)) + hoy.substring(1);
+
+        Insignia fecha = new Insignia(hoy, Tema.TEXTO_SUAVE, Tema.SUPERFICIE);
+        fecha.setFont(Tema.fuente(Font.BOLD, 12));
+        fecha.setBorder(new EmptyBorder(7, 14, 7, 14));
+        fecha.setIcon(new Icono(Icono.Tipo.RELOJ, 14, Tema.TEXTO_TENUE));
+        fecha.setIconTextGap(8);
+
+        JPanel derecha = new JPanel(new GridBagLayout());
+        derecha.setOpaque(false);
+        derecha.add(fecha);
 
         JPanel encabezado = new JPanel(new BorderLayout());
         encabezado.setOpaque(false);
-        encabezado.setBorder(
-                new EmptyBorder(0, 0, 28, 0)
-        );
+        encabezado.add(textos, BorderLayout.WEST);
+        encabezado.add(derecha, BorderLayout.EAST);
 
-        tituloSeccion = new JLabel("Panel general");
-        tituloSeccion.setFont(
-                new Font("SansSerif", Font.BOLD, 26)
-        );
-        tituloSeccion.setForeground(TEXTO);
+        panelInicio = new PanelInicio(red, this::mostrarSeccion);
+        PanelRutas panelRutas = new PanelRutas(red);
+        panelRutas.alCambiarRed(this::actualizarEstadoRed);
 
-        JLabel estado = new JLabel("SISTEMA DE DISTRIBUCION");
-        estado.setFont(
-                new Font("SansSerif", Font.BOLD, 11)
-        );
-        estado.setForeground(TURQUESA);
-
-        encabezado.add(
-                tituloSeccion,
-                BorderLayout.WEST
-        );
-
-        encabezado.add(
-                estado,
-                BorderLayout.EAST
-        );
-
-        tarjetas = new CardLayout();
-
-        panelCentral = new JPanel(tarjetas);
         panelCentral.setOpaque(false);
+        panelCentral.add(panelInicio, "inicio");
+        panelCentral.add(new PanelPedidos(red), "pedidos");
+        panelCentral.add(panelRutas, "rutas");
+        panelCentral.add(new PanelCargas(), "cargas");
 
-        // pantalla de inicio
-        panelCentral.add(
-                crearInicio(),
-                "inicio"
-        );
-
-        // gestion de pedidos
-        panelCentral.add(
-                crearSeccion(
-                        "Gestion de pedidos",
-                        "Organizacion, prioridades y busqueda de pedidos.",
-                        "Algoritmos: MergeSort y Busqueda Binaria"
-                ),
-                "pedidos"
-        );
-
-        // rutas con algoritmos reales
-        panelCentral.add(
-                new PanelRutas(),
-                "rutas"
-        );
-
-        // seleccion de cargas
-        panelCentral.add(
-                crearSeccion(
-                        "Seleccion de cargas",
-                        "Optimizacion de mercaderia segun la capacidad disponible.",
-                        "Algoritmo: Mochila 0/1"
-                ),
-                "cargas"
-        );
-
-        contenido.add(
-                encabezado,
-                BorderLayout.NORTH
-        );
-
-        contenido.add(
-                panelCentral,
-                BorderLayout.CENTER
-        );
-
-        add(contenido, BorderLayout.CENTER);
+        contenido.add(encabezado, BorderLayout.NORTH);
+        contenido.add(panelCentral, BorderLayout.CENTER);
+        return contenido;
     }
 
-    // pantalla principal
-    private JPanel crearInicio() {
+    private void mostrarSeccion(String seccion) {
+        for (String[] datos : SECCIONES) {
+            if (datos[0].equals(seccion)) {
+                tituloSeccion.setText(datos[1]);
+                subtituloSeccion.setText(datos[2]);
+            }
+        }
 
-        JPanel inicio = new JPanel(new BorderLayout(0, 25));
-        inicio.setOpaque(false);
+        for (Map.Entry<String, ItemMenu> entrada : items.entrySet()) {
+            entrada.getValue().setActivo(entrada.getKey().equals(seccion));
+        }
 
-        JPanel bienvenida = crearTarjeta();
-        bienvenida.setLayout(
-                new BoxLayout(bienvenida, BoxLayout.Y_AXIS)
-        );
+        if (seccion.equals("inicio")) {
+            panelInicio.actualizar();
+        }
 
-        JLabel encabezado = new JLabel("Bienvenido a NEXO");
-        encabezado.setFont(
-                new Font("SansSerif", Font.BOLD, 25)
-        );
-        encabezado.setForeground(TEXTO);
-        encabezado.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel descripcion = new JLabel(
-                "Sistema de planificacion y distribucion de ayuda."
-        );
-        descripcion.setFont(
-                new Font("SansSerif", Font.PLAIN, 14)
-        );
-        descripcion.setForeground(GRIS);
-        descripcion.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel detalle = new JLabel(
-                "Gestion de pedidos, rutas y cargas en un mismo lugar."
-        );
-        detalle.setFont(
-                new Font("SansSerif", Font.PLAIN, 13)
-        );
-        detalle.setForeground(GRIS);
-        detalle.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        bienvenida.add(encabezado);
-        bienvenida.add(Box.createVerticalStrut(12));
-        bienvenida.add(descripcion);
-        bienvenida.add(Box.createVerticalStrut(5));
-        bienvenida.add(detalle);
-
-        JPanel indicadores = new JPanel(
-                new GridLayout(1, 3, 18, 0)
-        );
-        indicadores.setOpaque(false);
-
-        indicadores.add(
-                crearIndicador(
-                        "PEDIDOS",
-                        "MergeSort",
-                        "Ordenamiento y consultas"
-                )
-        );
-
-        indicadores.add(
-                crearIndicador(
-                        "RUTAS",
-                        "4 metodos",
-                        "Calculo y planificacion"
-                )
-        );
-
-        indicadores.add(
-                crearIndicador(
-                        "CARGAS",
-                        "Mochila 0/1",
-                        "Seleccion optimizada"
-                )
-        );
-
-        JPanel superior = new JPanel(
-                new BorderLayout(0, 22)
-        );
-        superior.setOpaque(false);
-
-        superior.add(
-                bienvenida,
-                BorderLayout.NORTH
-        );
-        superior.add(
-                indicadores,
-                BorderLayout.CENTER
-        );
-
-        JPanel informacion = crearTarjeta();
-        informacion.setLayout(
-                new BoxLayout(informacion, BoxLayout.Y_AXIS)
-        );
-
-        JLabel titulo = new JLabel("Sobre el sistema");
-        titulo.setFont(
-                new Font("SansSerif", Font.BOLD, 18)
-        );
-        titulo.setForeground(TEXTO);
-        titulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JTextArea texto = new JTextArea(
-                "Esta aplicacion permite organizar pedidos de ayuda, "
-                        + "calcular rutas de distribucion y seleccionar mercaderia "
-                        + "segun la capacidad de los vehiculos.\n\n"
-                        + "Integra algoritmos de ordenamiento, busqueda, "
-                        + "caminos minimos, programacion dinamica y backtracking."
-        );
-
-        texto.setEditable(false);
-        texto.setFocusable(false);
-        texto.setOpaque(false);
-        texto.setLineWrap(true);
-        texto.setWrapStyleWord(true);
-        texto.setFont(
-                new Font("SansSerif", Font.PLAIN, 14)
-        );
-        texto.setForeground(GRIS);
-        texto.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        informacion.add(titulo);
-        informacion.add(Box.createVerticalStrut(15));
-        informacion.add(texto);
-
-        inicio.add(
-                superior,
-                BorderLayout.NORTH
-        );
-        inicio.add(
-                informacion,
-                BorderLayout.CENTER
-        );
-
-        return inicio;
-    }
-
-    // tarjetas del panel principal
-    private JPanel crearIndicador(
-            String etiqueta,
-            String valor,
-            String descripcion) {
-
-        JPanel tarjeta = crearTarjeta();
-        tarjeta.setLayout(
-                new BoxLayout(tarjeta, BoxLayout.Y_AXIS)
-        );
-
-        JLabel label = new JLabel(etiqueta);
-        label.setFont(
-                new Font("SansSerif", Font.BOLD, 11)
-        );
-        label.setForeground(TURQUESA);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel numero = new JLabel(valor);
-        numero.setFont(
-                new Font("SansSerif", Font.BOLD, 22)
-        );
-        numero.setForeground(TEXTO);
-        numero.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel detalle = new JLabel(descripcion);
-        detalle.setFont(
-                new Font("SansSerif", Font.PLAIN, 11)
-        );
-        detalle.setForeground(GRIS);
-        detalle.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        tarjeta.add(label);
-        tarjeta.add(Box.createVerticalStrut(14));
-        tarjeta.add(numero);
-        tarjeta.add(Box.createVerticalStrut(8));
-        tarjeta.add(detalle);
-
-        return tarjeta;
-    }
-
-    // secciones que completaremos despues
-    private JPanel crearSeccion(
-            String nombre,
-            String descripcion,
-            String algoritmos) {
-
-        JPanel contenedor = new JPanel(new BorderLayout());
-        contenedor.setOpaque(false);
-
-        JPanel tarjeta = crearTarjeta();
-        tarjeta.setLayout(
-                new BoxLayout(tarjeta, BoxLayout.Y_AXIS)
-        );
-
-        JLabel titulo = new JLabel(nombre);
-        titulo.setFont(
-                new Font("SansSerif", Font.BOLD, 23)
-        );
-        titulo.setForeground(TEXTO);
-        titulo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel detalle = new JLabel(descripcion);
-        detalle.setFont(
-                new Font("SansSerif", Font.PLAIN, 14)
-        );
-        detalle.setForeground(GRIS);
-        detalle.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel metodos = new JLabel(algoritmos);
-        metodos.setFont(
-                new Font("SansSerif", Font.BOLD, 13)
-        );
-        metodos.setForeground(TURQUESA);
-        metodos.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel proximo = new JLabel(
-                "Las operaciones se incorporaran en esta seccion."
-        );
-        proximo.setFont(
-                new Font("SansSerif", Font.PLAIN, 13)
-        );
-        proximo.setForeground(GRIS);
-        proximo.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        tarjeta.add(titulo);
-        tarjeta.add(Box.createVerticalStrut(15));
-        tarjeta.add(detalle);
-        tarjeta.add(Box.createVerticalStrut(25));
-        tarjeta.add(metodos);
-        tarjeta.add(Box.createVerticalStrut(25));
-        tarjeta.add(proximo);
-
-        contenedor.add(
-                tarjeta,
-                BorderLayout.NORTH
-        );
-
-        return contenedor;
-    }
-
-    // estilo de las tarjetas
-    private JPanel crearTarjeta() {
-
-        JPanel tarjeta = new JPanel();
-        tarjeta.setBackground(BLANCO);
-
-        tarjeta.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(225, 232, 237)
-                        ),
-                        new EmptyBorder(25, 25, 25, 25)
-                )
-        );
-
-        return tarjeta;
-    }
-
-    // navegar entre las pantallas
-    private void mostrarSeccion(
-            String seccion,
-            String titulo) {
-
+        actualizarEstadoRed();
         tarjetas.show(panelCentral, seccion);
-        tituloSeccion.setText(titulo);
     }
 
-    // iniciar la interfaz grafica
-    public static void main(String[] args) {
+    // ================= item del menu =================
 
-        SwingUtilities.invokeLater(() -> {
+    private static class ItemMenu extends JComponent {
 
-            try {
-                UIManager.setLookAndFeel(
-                        UIManager.getSystemLookAndFeelClassName()
-                );
-            } catch (Exception e) {
-                // mantener el estilo predeterminado
+        private final String texto;
+        private final Icono.Tipo icono;
+        private boolean activo;
+        private boolean encima;
+
+        ItemMenu(String texto, Icono.Tipo icono, Runnable accion) {
+            this.texto = texto;
+            this.icono = icono;
+
+            setPreferredSize(new Dimension(208, 44));
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    encima = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    encima = false;
+                    repaint();
+                }
+
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    accion.run();
+                }
+            });
+        }
+
+        void setActivo(boolean activo) {
+            this.activo = activo;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = Tema.suavizado(g);
+            int w = getWidth();
+            int h = getHeight();
+
+            if (activo) {
+                g2.setColor(new Color(19, 157, 151, 46));
+                g2.fill(new RoundRectangle2D.Double(0, 0, w, h, 12, 12));
+                g2.setColor(Tema.TURQUESA);
+                g2.fill(new RoundRectangle2D.Double(0, 12, 4, h - 24, 4, 4));
+            } else if (encima) {
+                g2.setColor(new Color(255, 255, 255, 14));
+                g2.fill(new RoundRectangle2D.Double(0, 0, w, h, 12, 12));
             }
 
-            VentanaPrincipal ventana =
-                    new VentanaPrincipal();
+            Color color = activo ? Color.WHITE : encima ? new Color(222, 232, 239) : Tema.MENU_TEXTO;
+            new Icono(icono, 18, activo ? new Color(64, 212, 203) : color).paintIcon(this, g2, 16, (h - 18) / 2);
 
-            ventana.setVisible(true);
+            g2.setFont(Tema.fuente(activo ? Font.BOLD : Font.PLAIN, 13.5f));
+            FontMetrics fm = g2.getFontMetrics();
+            g2.setColor(color);
+            g2.drawString(texto, 46, (h - fm.getHeight()) / 2 + fm.getAscent());
+            g2.dispose();
+        }
+    }
+
+    public static void main(String[] args) {
+        // suavizado de texto en todos los componentes (tiene que ir antes de crear la ventana)
+        System.setProperty("awt.useSystemAAFontSettings", "lcd");
+        System.setProperty("swing.aatext", "true");
+
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                // usar el estilo disponible
+            }
+
+            Tema.aplicarDefaults();
+            new VentanaPrincipal().setVisible(true);
         });
     }
 }
